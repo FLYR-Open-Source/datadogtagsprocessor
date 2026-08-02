@@ -81,7 +81,7 @@ func getTagsFormatted(attributes pcommon.Map, keys []string) []string {
 	return values
 }
 
-func AddDDTags(attributes Attributes, values []string) {
+func addDDTags(attributes Attributes, values []string) {
 	ddtags := getDDTags(attributes)
 
 	for _, value := range values {
@@ -102,4 +102,29 @@ func ExtractAttributeKeys(attributes pcommon.Map, cs config.ContextStatements) (
 
 	ddTagsFormat = getTagsFormatted(attributes, attributeKeys)
 	return attributeKeys, ddTagsFormat
+}
+
+func ProcessRecordAttributes(
+	attributes pcommon.Map,
+	cs config.ContextStatements,
+	resourceAttributeKeyValues []string,
+) {
+	if cs.Context == config.Resource {
+		if len(resourceAttributeKeyValues) > 0 {
+			addDDTags(attributes, resourceAttributeKeyValues)
+		}
+		return
+	}
+
+	attributeKeys, attributeKeyValues := ExtractAttributeKeys(attributes, cs)
+
+	if len(attributeKeyValues) > 0 {
+		addDDTags(attributes, attributeKeyValues)
+	}
+
+	if cs.Mode == config.Move {
+		for _, key := range attributeKeys {
+			attributes.Remove(key)
+		}
+	}
 }

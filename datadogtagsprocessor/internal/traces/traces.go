@@ -2,7 +2,6 @@ package traces
 
 import (
 	"context"
-	"slices"
 
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
@@ -27,47 +26,39 @@ func (*traceStatements) Shutdown(ctx context.Context) error {
 }
 
 func (*traceStatements) Consume(ctx context.Context, ptraces ptrace.Traces, cs config.ContextStatements) error {
+
 	for i := 0; i < ptraces.ResourceSpans().Len(); i++ {
 		rspans := ptraces.ResourceSpans().At(i)
 		resourceAttributes := rspans.Resource().Attributes()
 
 		var resourceAttributeKeys []string
 		var resourceAttributeKeyValues []string
+
 		if cs.Context == config.Resource {
-			resourceAttributeKeys, resourceAttributeKeyValues = extraction.ExtractAttributeKeys(resourceAttributes, cs)
+			resourceAttributeKeys, resourceAttributeKeyValues =
+				extraction.ExtractAttributeKeys(resourceAttributes, cs)
 		}
 
 		for j := 0; j < rspans.ScopeSpans().Len(); j++ {
-			sspans := rspans.ScopeSpans().At(j)
-			spans := sspans.Spans()
+			sspans := rspans.ScopeSpans().At(j).Spans()
 
-			for k := 0; k < spans.Len(); k++ {
-				span := spans.At(k)
-				spanAttributes := span.Attributes()
-
-				spanAttributeKeys := []string{}
-				spanAttributeKeyValues := []string{}
-
-				if cs.Context == config.Span {
-					spanAttributeKeys, spanAttributeKeyValues = extraction.ExtractAttributeKeys(spanAttributes, cs)
-				}
-
-				extraction.AddDDTags(spanAttributes, slices.Concat(resourceAttributeKeyValues, spanAttributeKeyValues))
-
-				if cs.Mode == config.Move && cs.Context == config.Span {
-					for _, key := range spanAttributeKeys {
-						spanAttributes.Remove(key)
-					}
-				}
+			for k := 0; k < sspans.Len(); k++ {
+				extraction.ProcessRecordAttributes(
+					sspans.At(k).Attributes(),
+					cs,
+					resourceAttributeKeyValues,
+				)
 			}
 		}
 
-		if cs.Mode == config.Move && cs.Context == config.Resource && len(resourceAttributeKeys) > 0 {
+		if cs.Mode == config.Move &&
+			cs.Context == config.Resource {
 			for _, key := range resourceAttributeKeys {
 				resourceAttributes.Remove(key)
 			}
 		}
 	}
+
 	return nil
 }
 
