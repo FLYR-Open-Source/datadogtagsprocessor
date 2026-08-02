@@ -12,12 +12,11 @@ import (
 )
 
 type Processor struct {
-	mode     config.Mode
 	contexts []config.ProcessorContext[plog.Logs]
 	logger   *zap.Logger
 }
 
-func NewProcessor(mode config.Mode, contextStatements []config.ContextStatements, settings component.TelemetrySettings) (*Processor, error) {
+func NewProcessor(contextStatements []config.ContextStatements, settings component.TelemetrySettings) (*Processor, error) {
 	contexts := make([]config.ProcessorContext[plog.Logs], len(contextStatements))
 
 	for i, cs := range contextStatements {
@@ -28,7 +27,6 @@ func NewProcessor(mode config.Mode, contextStatements []config.ContextStatements
 	}
 
 	return &Processor{
-		mode:     mode,
 		contexts: contexts,
 		logger:   settings.Logger,
 	}, nil
@@ -36,7 +34,7 @@ func NewProcessor(mode config.Mode, contextStatements []config.ContextStatements
 
 func (p *Processor) ConsumeLogs(ctx context.Context, ld plog.Logs) (plog.Logs, error) {
 	for _, c := range p.contexts {
-		err := c.Consumer.Consume(ctx, ld, p.mode, c.ContextStatements)
+		err := c.Consumer.Consume(ctx, ld, c.ContextStatements)
 		if err != nil {
 			p.logger.Error("failed processing logs", zap.Error(err))
 			return ld, err

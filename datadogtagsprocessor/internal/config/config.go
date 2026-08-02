@@ -54,13 +54,14 @@ func (c *ContextID) IsEmpty() bool {
 type Attribute string
 
 type ContextStatements struct {
+	Mode       Mode      `mapstructure:"mode"`
 	Context    ContextID `mapstructure:"context"`
 	Attributes []string  `mapstructure:"attributes"`
 }
 
 type Consumer[T any] interface {
 	IsContextValid(ContextID) bool
-	Consume(context.Context, T, Mode, ContextStatements) error
+	Consume(context.Context, T, ContextStatements) error
 }
 
 type Shutdownable interface {

@@ -60,7 +60,7 @@ func TestLogStatements_Consume_ResourceContext(t *testing.T) {
 	}
 
 	stmts := &logStatements{}
-	err := stmts.Consume(t.Context(), logs, config.Merge, cs)
+	err := stmts.Consume(t.Context(), logs, cs)
 	assert.NoError(t, err)
 
 	rlogs := logs.ResourceLogs().At(0)
@@ -85,7 +85,7 @@ func TestLogStatements_Consume_LogContext(t *testing.T) {
 	}
 
 	stmts := &logStatements{}
-	err := stmts.Consume(t.Context(), logs, config.Merge, cs)
+	err := stmts.Consume(t.Context(), logs, cs)
 	assert.NoError(t, err)
 
 	slogs := logs.ResourceLogs().At(0).ScopeLogs().At(0)
@@ -120,7 +120,7 @@ func TestLogStatements_Consume_MultipleResources(t *testing.T) {
 	}
 
 	stmts := &logStatements{}
-	err := stmts.Consume(t.Context(), logs, config.Merge, cs)
+	err := stmts.Consume(t.Context(), logs, cs)
 	assert.NoError(t, err)
 
 	ddtagsA, _ := logA.Attributes().Get("ddtags")
@@ -142,12 +142,13 @@ func TestLogStatements_Consume_Move(t *testing.T) {
 	log.Attributes().PutStr("team", "payments")
 
 	cs := config.ContextStatements{
+		Mode:       config.Move,
 		Context:    config.Log,
 		Attributes: []string{"team"},
 	}
 
 	stmts := &logStatements{}
-	err := stmts.Consume(t.Context(), logs, config.Move, cs)
+	err := stmts.Consume(t.Context(), logs, cs)
 	assert.NoError(t, err)
 
 	_, ok := log.Attributes().Get("team")
@@ -176,12 +177,13 @@ func TestLogStatements_Consume_ResourceContext_Move(t *testing.T) {
 	log3.Attributes().PutEmptySlice("noop")
 
 	cs := config.ContextStatements{
+		Mode:       config.Move,
 		Context:    config.Resource,
 		Attributes: []string{"k8s.cluster.name"},
 	}
 
 	stmts := &logStatements{}
-	err := stmts.Consume(t.Context(), logs, config.Move, cs)
+	err := stmts.Consume(t.Context(), logs, cs)
 	assert.NoError(t, err)
 
 	_, ok := rlogs.Resource().Attributes().Get("k8s.cluster.name")
@@ -209,7 +211,7 @@ func TestLogStatements_Consume_NoResourceLogs(t *testing.T) {
 	}
 
 	stmts := &logStatements{}
-	err := stmts.Consume(t.Context(), logs, config.Merge, cs)
+	err := stmts.Consume(t.Context(), logs, cs)
 	assert.NoError(t, err)
 }
 

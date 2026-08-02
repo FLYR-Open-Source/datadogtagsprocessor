@@ -20,7 +20,7 @@ type mockConsumer struct {
 
 func (*mockConsumer) IsContextValid(config.ContextID) bool { return true }
 
-func (m *mockConsumer) Consume(context.Context, ptrace.Traces, config.Mode, config.ContextStatements) error {
+func (m *mockConsumer) Consume(context.Context, ptrace.Traces, config.ContextStatements) error {
 	return m.consumeErr
 }
 
@@ -45,14 +45,14 @@ func TestNewProcessor(t *testing.T) {
 			{Context: config.Span, Attributes: []string{"team"}},
 		}
 
-		p, err := NewProcessor(config.Merge, statements, newTelemetrySettings())
+		p, err := NewProcessor(statements, newTelemetrySettings())
 		assert.NoError(t, err)
 		assert.NotNil(t, p)
 		assert.Len(t, p.contexts, 2)
 	})
 
 	t.Run("with no statements", func(t *testing.T) {
-		p, err := NewProcessor(config.Merge, nil, newTelemetrySettings())
+		p, err := NewProcessor(nil, newTelemetrySettings())
 		assert.NoError(t, err)
 		assert.NotNil(t, p)
 		assert.Len(t, p.contexts, 0)
@@ -66,7 +66,7 @@ func TestProcessor_ConsumeTraces(t *testing.T) {
 			{Context: config.Span, Attributes: []string{"team"}},
 		}
 
-		p, err := NewProcessor(config.Merge, statements, newTelemetrySettings())
+		p, err := NewProcessor(statements, newTelemetrySettings())
 		assert.NoError(t, err)
 
 		traces := ptrace.NewTraces()
@@ -85,7 +85,6 @@ func TestProcessor_ConsumeTraces(t *testing.T) {
 
 	t.Run("stops and returns error on first failing consumer", func(t *testing.T) {
 		p := &Processor{
-			mode: config.Merge,
 			contexts: []config.ProcessorContext[ptrace.Traces]{
 				{Consumer: &mockConsumer{consumeErr: errors.New("boom")}, ContextStatements: config.ContextStatements{}},
 			},
@@ -145,7 +144,7 @@ func TestProcessor_Shutdown(t *testing.T) {
 	})
 
 	t.Run("real traceStatements consumer has no-op shutdown", func(t *testing.T) {
-		p, err := NewProcessor(config.Merge, []config.ContextStatements{
+		p, err := NewProcessor([]config.ContextStatements{
 			{Context: config.Span, Attributes: []string{"team"}},
 		}, newTelemetrySettings())
 		assert.NoError(t, err)

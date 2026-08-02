@@ -33,7 +33,7 @@ func createTraces(ctx context.Context, set processor.Settings, cfg component.Con
 		return nil, fmt.Errorf("invalid config for \"datadogtags\" processor.")
 	}
 
-	p, err := traces.NewProcessor(oCfg.Mode, oCfg.TraceStatements, set.TelemetrySettings)
+	p, err := traces.NewProcessor(oCfg.TraceStatements, set.TelemetrySettings)
 	if err != nil {
 		return nil, fmt.Errorf("invalid config for \"transform\" processor %w", err)
 	}
@@ -55,7 +55,7 @@ func createLogs(ctx context.Context, set processor.Settings, cfg component.Confi
 		return nil, fmt.Errorf("invalid config for \"datadogtags\" processor.")
 	}
 
-	p, err := logs.NewProcessor(oCfg.Mode, oCfg.LogStatements, set.TelemetrySettings)
+	p, err := logs.NewProcessor(oCfg.LogStatements, set.TelemetrySettings)
 	if err != nil {
 		return nil, fmt.Errorf("invalid config for \"transform\" processor %w", err)
 	}

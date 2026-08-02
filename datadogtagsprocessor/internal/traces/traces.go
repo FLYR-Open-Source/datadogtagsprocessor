@@ -26,7 +26,7 @@ func (*traceStatements) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-func (*traceStatements) Consume(ctx context.Context, ptraces ptrace.Traces, mode config.Mode, cs config.ContextStatements) error {
+func (*traceStatements) Consume(ctx context.Context, ptraces ptrace.Traces, cs config.ContextStatements) error {
 	for i := 0; i < ptraces.ResourceSpans().Len(); i++ {
 		rspans := ptraces.ResourceSpans().At(i)
 		resourceAttributes := rspans.Resource().Attributes()
@@ -54,7 +54,7 @@ func (*traceStatements) Consume(ctx context.Context, ptraces ptrace.Traces, mode
 
 				extraction.AddDDTags(spanAttributes, slices.Concat(resourceAttributeKeyValues, spanAttributeKeyValues))
 
-				if mode == config.Move && cs.Context == config.Span {
+				if cs.Mode == config.Move && cs.Context == config.Span {
 					for _, key := range spanAttributeKeys {
 						spanAttributes.Remove(key)
 					}
@@ -62,7 +62,7 @@ func (*traceStatements) Consume(ctx context.Context, ptraces ptrace.Traces, mode
 			}
 		}
 
-		if mode == config.Move && cs.Context == config.Resource && len(resourceAttributeKeys) > 0 {
+		if cs.Mode == config.Move && cs.Context == config.Resource && len(resourceAttributeKeys) > 0 {
 			for _, key := range resourceAttributeKeys {
 				resourceAttributes.Remove(key)
 			}

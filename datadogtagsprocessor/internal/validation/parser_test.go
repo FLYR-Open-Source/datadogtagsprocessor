@@ -21,7 +21,7 @@ func (*mockConsumer) IsContextValid(context config.ContextID) bool {
 	}
 }
 
-func (l *mockConsumer) Consume(ctx context.Context, ptraces ptrace.Traces, mode config.Mode, cs config.ContextStatements) error {
+func (l *mockConsumer) Consume(ctx context.Context, ptraces ptrace.Traces, cs config.ContextStatements) error {
 	return nil
 }
 

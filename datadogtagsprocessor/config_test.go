@@ -25,23 +25,26 @@ func Test_LoadConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(metadata.Type, ""),
 			expected: &Config{
-				Mode: config.Merge,
 				TraceStatements: []config.ContextStatements{
 					{
+						Mode:       config.Merge,
 						Context:    config.Resource,
 						Attributes: []string{"k8s.*", "host.cpu.cache.l2.sizestring"},
 					},
 					{
+						Mode:       config.Merge,
 						Context:    config.Span,
 						Attributes: []string{"team"},
 					},
 				},
 				LogStatements: []config.ContextStatements{
 					{
+						Mode:       config.Merge,
 						Context:    config.Resource,
 						Attributes: []string{"k8s.*", "host.cpu.cache.l2.sizestring"},
 					},
 					{
+						Mode:       config.Merge,
 						Context:    config.Log,
 						Attributes: []string{"team"},
 					},

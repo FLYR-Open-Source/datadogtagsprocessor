@@ -11,7 +11,6 @@ import (
 )
 
 type Config struct {
-	Mode            config.Mode                `mapstructure:"mode"`
 	TraceStatements []config.ContextStatements `mapstructure:"trace_statements"`
 	LogStatements   []config.ContextStatements `mapstructure:"log_statements"`
 

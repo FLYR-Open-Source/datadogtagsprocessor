@@ -81,15 +81,16 @@ func TestProcessLogs_Merge_WithoutWildcards(t *testing.T) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Merge
 	oCfg.LogStatements = []config.ContextStatements{
 		{
+			Mode:    config.Merge,
 			Context: "log",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Merge,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.deployment.name",
@@ -129,15 +130,16 @@ func TestProcessLogs_Merge_WithWildcards(t *testing.T) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Merge
 	oCfg.LogStatements = []config.ContextStatements{
 		{
+			Mode:    config.Merge,
 			Context: "log",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Merge,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.*",
@@ -172,15 +174,16 @@ func TestProcessLogs_Move_WithoutWildcards(t *testing.T) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Move
 	oCfg.LogStatements = []config.ContextStatements{
 		{
+			Mode:    config.Move,
 			Context: "log",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Move,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.deployment.name",
@@ -220,15 +223,16 @@ func TestProcessLogs_Move_WithWildcards(t *testing.T) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Move
 	oCfg.LogStatements = []config.ContextStatements{
 		{
+			Mode:    config.Move,
 			Context: "log",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Move,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.*",
@@ -264,15 +268,16 @@ func TestProcessTraces_Merge_WithoutWildcards(t *testing.T) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Merge
 	oCfg.TraceStatements = []config.ContextStatements{
 		{
+			Mode:    config.Merge,
 			Context: "span",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Merge,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.deployment.name",
@@ -312,15 +317,16 @@ func TestProcessTraces_Merge_WithWildcards(t *testing.T) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Merge
 	oCfg.TraceStatements = []config.ContextStatements{
 		{
+			Mode:    config.Merge,
 			Context: "span",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Merge,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.*",
@@ -355,15 +361,16 @@ func TestProcessTraces_Move_WithoutWildcards(t *testing.T) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Move
 	oCfg.TraceStatements = []config.ContextStatements{
 		{
+			Mode:    config.Move,
 			Context: "span",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Move,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.deployment.name",
@@ -403,15 +410,16 @@ func TestProcessTraces_Move_WithWildcards(t *testing.T) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Move
 	oCfg.TraceStatements = []config.ContextStatements{
 		{
+			Mode:    config.Move,
 			Context: "span",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Move,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.*",
@@ -447,15 +455,16 @@ func BenchmarkLogs_Merge_WithoutWildcards(b *testing.B) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Merge
 	oCfg.LogStatements = []config.ContextStatements{
 		{
+			Mode:    config.Merge,
 			Context: "log",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Merge,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.deployment.name",
@@ -488,15 +497,16 @@ func BenchmarkLogs_Merge_WithWildcards(b *testing.B) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Merge
 	oCfg.LogStatements = []config.ContextStatements{
 		{
+			Mode:    config.Merge,
 			Context: "log",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Merge,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.*",
@@ -524,15 +534,16 @@ func BenchmarkLogs_Move_WithoutWildcards(b *testing.B) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Move
 	oCfg.LogStatements = []config.ContextStatements{
 		{
+			Mode:    config.Move,
 			Context: "log",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Move,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.deployment.name",
@@ -565,15 +576,16 @@ func BenchmarkLogs_Move_WithWildcards(b *testing.B) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Move
 	oCfg.LogStatements = []config.ContextStatements{
 		{
+			Mode:    config.Move,
 			Context: "log",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Move,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.*",
@@ -602,15 +614,16 @@ func BenchmarkTraces_Merge_WithoutWildcards(b *testing.B) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Merge
 	oCfg.TraceStatements = []config.ContextStatements{
 		{
+			Mode:    config.Merge,
 			Context: "span",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Merge,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.deployment.name",
@@ -643,15 +656,16 @@ func BenchmarkTraces_Merge_WithWildcards(b *testing.B) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Merge
 	oCfg.TraceStatements = []config.ContextStatements{
 		{
+			Mode:    config.Merge,
 			Context: "span",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Merge,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.*",
@@ -679,15 +693,16 @@ func BenchmarkTraces_Move_WithoutWildcards(b *testing.B) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Move
 	oCfg.TraceStatements = []config.ContextStatements{
 		{
+			Mode:    config.Move,
 			Context: "span",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Move,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.deployment.name",
@@ -720,15 +735,16 @@ func BenchmarkTraces_Move_WithWildcards(b *testing.B) {
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
 
-	oCfg.Mode = config.Move
 	oCfg.TraceStatements = []config.ContextStatements{
 		{
+			Mode:    config.Move,
 			Context: "span",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
+			Mode:    config.Move,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.*",

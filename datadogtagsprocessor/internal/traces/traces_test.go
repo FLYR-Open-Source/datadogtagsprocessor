@@ -60,7 +60,7 @@ func TestTraceStatements_Consume_ResourceContext(t *testing.T) {
 	}
 
 	stmts := &traceStatements{}
-	err := stmts.Consume(t.Context(), traces, config.Merge, cs)
+	err := stmts.Consume(t.Context(), traces, cs)
 	assert.NoError(t, err)
 
 	rspans := traces.ResourceSpans().At(0)
@@ -86,7 +86,7 @@ func TestTraceStatements_Consume_SpanContext(t *testing.T) {
 	}
 
 	stmts := &traceStatements{}
-	err := stmts.Consume(t.Context(), traces, config.Merge, cs)
+	err := stmts.Consume(t.Context(), traces, cs)
 	assert.NoError(t, err)
 
 	sspans := traces.ResourceSpans().At(0).ScopeSpans().At(0)
@@ -121,7 +121,7 @@ func TestTraceStatements_Consume_MultipleResources(t *testing.T) {
 	}
 
 	stmts := &traceStatements{}
-	err := stmts.Consume(t.Context(), traces, config.Merge, cs)
+	err := stmts.Consume(t.Context(), traces, cs)
 	assert.NoError(t, err)
 
 	ddtagsA, _ := spanA.Attributes().Get("ddtags")
@@ -143,12 +143,13 @@ func TestTraceStatements_Consume_Move(t *testing.T) {
 	span.Attributes().PutStr("team", "payments")
 
 	cs := config.ContextStatements{
+		Mode:       config.Move,
 		Context:    config.Span,
 		Attributes: []string{"team"},
 	}
 
 	stmts := &traceStatements{}
-	err := stmts.Consume(t.Context(), traces, config.Move, cs)
+	err := stmts.Consume(t.Context(), traces, cs)
 	assert.NoError(t, err)
 
 	_, ok := span.Attributes().Get("team")
@@ -177,12 +178,13 @@ func TestTraceStatements_Consume_ResourceContext_Move(t *testing.T) {
 	span3.Attributes().PutEmptySlice("noop")
 
 	cs := config.ContextStatements{
+		Mode:       config.Move,
 		Context:    config.Resource,
 		Attributes: []string{"k8s.cluster.name"},
 	}
 
 	stmts := &traceStatements{}
-	err := stmts.Consume(t.Context(), traces, config.Move, cs)
+	err := stmts.Consume(t.Context(), traces, cs)
 	assert.NoError(t, err)
 
 	_, ok := rspans.Resource().Attributes().Get("k8s.cluster.name")
@@ -210,7 +212,7 @@ func TestTraceStatements_Consume_NoResourceSpans(t *testing.T) {
 	}
 
 	stmts := &traceStatements{}
-	err := stmts.Consume(t.Context(), traces, config.Merge, cs)
+	err := stmts.Consume(t.Context(), traces, cs)
 	assert.NoError(t, err)
 }
 
