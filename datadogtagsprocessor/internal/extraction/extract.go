@@ -2,7 +2,6 @@ package extraction
 
 import (
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/config"
@@ -101,11 +100,6 @@ func ExtractAttributeKeys(attributes pcommon.Map, cs config.ContextStatements) (
 		keys := lookupSelectedAttributes(lookup, attributes, selectedAttribute)
 		attributeKeys = append(attributeKeys, keys...)
 	}
-
-	// Sort for deterministic ddtags ordering: wildcard resolution walks a
-	// map-backed trie, whose iteration order (and thus key order) is
-	// randomized per run.
-	slices.Sort(attributeKeys)
 
 	ddTagsFormat = getTagsFormatted(attributes, attributeKeys)
 	return attributeKeys, ddTagsFormat

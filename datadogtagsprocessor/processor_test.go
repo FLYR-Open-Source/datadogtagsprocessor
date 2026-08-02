@@ -2,6 +2,7 @@ package datadogtagsprocessor
 
 import (
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/config"
@@ -11,8 +12,68 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest/ptracetest"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/consumer/consumertest"
+	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/plog"
+	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.opentelemetry.io/collector/processor/processortest"
 )
+
+const ddtagsKey = "ddtags"
+
+// sortDDTags sorts the ddtags slice attribute in place, if present. ddtags
+// built from wildcard-matched attributes have no guaranteed order (wildcard
+// resolution walks a map-backed trie), so tests must normalize order before
+// comparing against a golden fixture rather than relying on a specific one.
+func sortDDTags(attrs pcommon.Map) {
+	value, ok := attrs.Get(ddtagsKey)
+	if !ok {
+		return
+	}
+
+	ddtags := value.Slice()
+	values := make([]string, ddtags.Len())
+	for i := 0; i < ddtags.Len(); i++ {
+		values[i] = ddtags.At(i).AsString()
+	}
+
+	slices.Sort(values)
+
+	for i, v := range values {
+		ddtags.At(i).SetStr(v)
+	}
+}
+
+func sortLogsDDTags(logs plog.Logs) {
+	rls := logs.ResourceLogs()
+	for i := 0; i < rls.Len(); i++ {
+		rl := rls.At(i)
+		sortDDTags(rl.Resource().Attributes())
+
+		sls := rl.ScopeLogs()
+		for j := 0; j < sls.Len(); j++ {
+			records := sls.At(j).LogRecords()
+			for k := 0; k < records.Len(); k++ {
+				sortDDTags(records.At(k).Attributes())
+			}
+		}
+	}
+}
+
+func sortTracesDDTags(traces ptrace.Traces) {
+	rss := traces.ResourceSpans()
+	for i := 0; i < rss.Len(); i++ {
+		rs := rss.At(i)
+		sortDDTags(rs.Resource().Attributes())
+
+		sss := rs.ScopeSpans()
+		for j := 0; j < sss.Len(); j++ {
+			spans := sss.At(j).Spans()
+			for k := 0; k < spans.Len(); k++ {
+				sortDDTags(spans.At(k).Attributes())
+			}
+		}
+	}
+}
 
 func TestProcessLogs_Merge_WithoutWildcards(t *testing.T) {
 	factory := NewFactory()
@@ -56,6 +117,9 @@ func TestProcessLogs_Merge_WithoutWildcards(t *testing.T) {
 	actual := sink.AllLogs()
 	require.Len(t, actual, 1)
 
+	sortLogsDDTags(expected)
+	sortLogsDDTags(actual[0])
+
 	require.NoError(t, plogtest.CompareLogs(expected, actual[0]))
 }
 
@@ -95,6 +159,9 @@ func TestProcessLogs_Merge_WithWildcards(t *testing.T) {
 
 	actual := sink.AllLogs()
 	require.Len(t, actual, 1)
+
+	sortLogsDDTags(expected)
+	sortLogsDDTags(actual[0])
 
 	require.NoError(t, plogtest.CompareLogs(expected, actual[0]))
 }
@@ -141,6 +208,9 @@ func TestProcessLogs_Move_WithoutWildcards(t *testing.T) {
 	actual := sink.AllLogs()
 	require.Len(t, actual, 1)
 
+	sortLogsDDTags(expected)
+	sortLogsDDTags(actual[0])
+
 	require.NoError(t, plogtest.CompareLogs(expected, actual[0]))
 }
 
@@ -180,6 +250,9 @@ func TestProcessLogs_Move_WithWildcards(t *testing.T) {
 
 	actual := sink.AllLogs()
 	require.Len(t, actual, 1)
+
+	sortLogsDDTags(expected)
+	sortLogsDDTags(actual[0])
 
 	require.NoError(t, plogtest.CompareLogs(expected, actual[0]))
 }
@@ -226,6 +299,9 @@ func TestProcessTraces_Merge_WithoutWildcards(t *testing.T) {
 	actual := sink.AllTraces()
 	require.Len(t, actual, 1)
 
+	sortTracesDDTags(expected)
+	sortTracesDDTags(actual[0])
+
 	require.NoError(t, ptracetest.CompareTraces(expected, actual[0]))
 }
 
@@ -265,6 +341,9 @@ func TestProcessTraces_Merge_WithWildcards(t *testing.T) {
 
 	actual := sink.AllTraces()
 	require.Len(t, actual, 1)
+
+	sortTracesDDTags(expected)
+	sortTracesDDTags(actual[0])
 
 	require.NoError(t, ptracetest.CompareTraces(expected, actual[0]))
 }
@@ -311,6 +390,9 @@ func TestProcessTraces_Move_WithoutWildcards(t *testing.T) {
 	actual := sink.AllTraces()
 	require.Len(t, actual, 1)
 
+	sortTracesDDTags(expected)
+	sortTracesDDTags(actual[0])
+
 	require.NoError(t, ptracetest.CompareTraces(expected, actual[0]))
 }
 
@@ -350,6 +432,9 @@ func TestProcessTraces_Move_WithWildcards(t *testing.T) {
 
 	actual := sink.AllTraces()
 	require.Len(t, actual, 1)
+
+	sortTracesDDTags(expected)
+	sortTracesDDTags(actual[0])
 
 	require.NoError(t, ptracetest.CompareTraces(expected, actual[0]))
 }
