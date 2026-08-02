@@ -12,12 +12,12 @@ import (
 )
 
 type Processor struct {
-	action   config.Mode
+	mode     config.Mode
 	contexts []config.ProcessorContext[ptrace.Traces]
 	logger   *zap.Logger
 }
 
-func NewProcessor(action config.Mode, contextStatements []config.ContextStatements, settings component.TelemetrySettings) (*Processor, error) {
+func NewProcessor(mode config.Mode, contextStatements []config.ContextStatements, settings component.TelemetrySettings) (*Processor, error) {
 	contexts := make([]config.ProcessorContext[ptrace.Traces], len(contextStatements))
 
 	for i, cs := range contextStatements {
@@ -28,7 +28,7 @@ func NewProcessor(action config.Mode, contextStatements []config.ContextStatemen
 	}
 
 	return &Processor{
-		action:   action,
+		mode:     mode,
 		contexts: contexts,
 		logger:   settings.Logger,
 	}, nil
@@ -36,7 +36,7 @@ func NewProcessor(action config.Mode, contextStatements []config.ContextStatemen
 
 func (p *Processor) ConsumeTraces(ctx context.Context, td ptrace.Traces) (ptrace.Traces, error) {
 	for _, c := range p.contexts {
-		err := c.Consumer.Consume(ctx, td, p.action, c.ContextStatements)
+		err := c.Consumer.Consume(ctx, td, p.mode, c.ContextStatements)
 		if err != nil {
 			p.logger.Error("failed processing traces", zap.Error(err))
 			return td, err

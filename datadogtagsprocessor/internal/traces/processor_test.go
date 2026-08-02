@@ -85,7 +85,7 @@ func TestProcessor_ConsumeTraces(t *testing.T) {
 
 	t.Run("stops and returns error on first failing consumer", func(t *testing.T) {
 		p := &Processor{
-			action: config.Merge,
+			mode: config.Merge,
 			contexts: []config.ProcessorContext[ptrace.Traces]{
 				{Consumer: &mockConsumer{consumeErr: errors.New("boom")}, ContextStatements: config.ContextStatements{}},
 			},
