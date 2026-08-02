@@ -8,6 +8,23 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 )
 
+func buildLogs() plog.Logs {
+	logs := plog.NewLogs()
+
+	rlogs := logs.ResourceLogs().AppendEmpty()
+	rlogs.Resource().Attributes().PutStr("k8s.cluster.name", "cluster-a")
+
+	slogs := rlogs.ScopeLogs().AppendEmpty()
+
+	log1 := slogs.LogRecords().AppendEmpty()
+	log1.Attributes().PutStr("team", "payments")
+
+	log2 := slogs.LogRecords().AppendEmpty()
+	log2.Attributes().PutStr("team", "my-service")
+
+	return logs
+}
+
 func TestLogStatements_IsContextValid(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -34,23 +51,6 @@ func TestLogStatements_Shutdown(t *testing.T) {
 	assert.NoError(t, stmts.Shutdown(t.Context()))
 }
 
-func buildLogs() plog.Logs {
-	logs := plog.NewLogs()
-
-	rlogs := logs.ResourceLogs().AppendEmpty()
-	rlogs.Resource().Attributes().PutStr("k8s.cluster.name", "cluster-a")
-
-	slogs := rlogs.ScopeLogs().AppendEmpty()
-
-	log1 := slogs.LogRecords().AppendEmpty()
-	log1.Attributes().PutStr("team", "payments")
-
-	log2 := slogs.LogRecords().AppendEmpty()
-	log2.Attributes().PutStr("team", "my-service")
-
-	return logs
-}
-
 func TestLogStatements_Consume_ResourceContext(t *testing.T) {
 	logs := buildLogs()
 
@@ -65,16 +65,14 @@ func TestLogStatements_Consume_ResourceContext(t *testing.T) {
 
 	rlogs := logs.ResourceLogs().At(0)
 
-	// Resource-context statements tag the resource attributes themselves,
-	// applied once per resource regardless of how many log records it has.
-	ddtags, ok := rlogs.Resource().Attributes().Get("ddtags")
-	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+	_, ok := rlogs.Resource().Attributes().Get("ddtags")
+	assert.False(t, ok)
 
 	// Log record attributes are untouched by a resource-context statement.
 	for i := 0; i < rlogs.ScopeLogs().At(0).LogRecords().Len(); i++ {
-		_, ok := rlogs.ScopeLogs().At(0).LogRecords().At(i).Attributes().Get("ddtags")
-		assert.False(t, ok)
+		ddtags, ok := rlogs.ScopeLogs().At(0).LogRecords().At(i).Attributes().Get("ddtags")
+		assert.True(t, ok)
+		assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
 	}
 }
 
@@ -125,16 +123,16 @@ func TestLogStatements_Consume_MultipleResources(t *testing.T) {
 	err := stmts.Consume(t.Context(), logs, config.Merge, cs)
 	assert.NoError(t, err)
 
-	ddtagsA, _ := rlogsA.Resource().Attributes().Get("ddtags")
+	ddtagsA, _ := logA.Attributes().Get("ddtags")
 	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsA.Slice().AsRaw())
 
-	ddtagsB, _ := rlogsB.Resource().Attributes().Get("ddtags")
+	ddtagsB, _ := logB.Attributes().Get("ddtags")
 	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-b"}, ddtagsB.Slice().AsRaw())
 
 	// Neither resource's tags leak onto the other's log records.
-	_, ok := logA.Attributes().Get("ddtags")
+	_, ok := rlogsA.Resource().Attributes().Get("ddtags")
 	assert.False(t, ok)
-	_, ok = logB.Attributes().Get("ddtags")
+	_, ok = rlogsB.Resource().Attributes().Get("ddtags")
 	assert.False(t, ok)
 }
 
@@ -167,9 +165,15 @@ func TestLogStatements_Consume_ResourceContext_Move(t *testing.T) {
 	rlogs.Resource().Attributes().PutStr("k8s.cluster.name", "cluster-a")
 
 	scopeLogs := rlogs.ScopeLogs().AppendEmpty()
-	scopeLogs.LogRecords().AppendEmpty().Attributes().PutEmptySlice("noop")
-	scopeLogs.LogRecords().AppendEmpty().Attributes().PutEmptySlice("noop")
-	scopeLogs.LogRecords().AppendEmpty().Attributes().PutEmptySlice("noop")
+
+	log1 := scopeLogs.LogRecords().AppendEmpty()
+	log1.Attributes().PutEmptySlice("noop")
+
+	log2 := scopeLogs.LogRecords().AppendEmpty()
+	log2.Attributes().PutEmptySlice("noop")
+
+	log3 := scopeLogs.LogRecords().AppendEmpty()
+	log3.Attributes().PutEmptySlice("noop")
 
 	cs := config.ContextStatements{
 		Context:    config.Resource,
@@ -183,7 +187,15 @@ func TestLogStatements_Consume_ResourceContext_Move(t *testing.T) {
 	_, ok := rlogs.Resource().Attributes().Get("k8s.cluster.name")
 	assert.False(t, ok)
 
-	ddtags, ok := rlogs.Resource().Attributes().Get("ddtags")
+	ddtags, ok := log1.Attributes().Get("ddtags")
+	assert.True(t, ok)
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+
+	ddtags, ok = log2.Attributes().Get("ddtags")
+	assert.True(t, ok)
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+
+	ddtags, ok = log3.Attributes().Get("ddtags")
 	assert.True(t, ok)
 	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
 }

@@ -78,13 +78,9 @@ func TestProcessor_ConsumeTraces(t *testing.T) {
 		result, err := p.ConsumeTraces(t.Context(), traces)
 		assert.NoError(t, err)
 
-		resourceDdtags, ok := result.ResourceSpans().At(0).Resource().Attributes().Get("ddtags")
-		assert.True(t, ok)
-		assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, resourceDdtags.Slice().AsRaw())
-
 		spanDdtags, ok := result.ResourceSpans().At(0).ScopeSpans().At(0).Spans().At(0).Attributes().Get("ddtags")
 		assert.True(t, ok)
-		assert.ElementsMatch(t, []any{"team:payments"}, spanDdtags.Slice().AsRaw())
+		assert.ElementsMatch(t, []any{"team:payments", "k8s.cluster.name:cluster-a"}, spanDdtags.Slice().AsRaw())
 	})
 
 	t.Run("stops and returns error on first failing consumer", func(t *testing.T) {

@@ -75,16 +75,13 @@ func TestProcessor_ConsumeLogs(t *testing.T) {
 		log := rlogs.ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 		log.Attributes().PutStr("team", "payments")
 
-		result, err := p.ConsumeLogs(t.Context(), logs)
+		_, err = p.ConsumeLogs(t.Context(), logs)
 		assert.NoError(t, err)
 
-		resourceDdtags, ok := result.ResourceLogs().At(0).Resource().Attributes().Get("ddtags")
+		resourceDdtags, ok := log.Attributes().Get("ddtags")
 		assert.True(t, ok)
-		assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, resourceDdtags.Slice().AsRaw())
+		assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a", "team:payments"}, resourceDdtags.Slice().AsRaw())
 
-		logDdtags, ok := result.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Get("ddtags")
-		assert.True(t, ok)
-		assert.ElementsMatch(t, []any{"team:payments"}, logDdtags.Slice().AsRaw())
 	})
 
 	t.Run("stops and returns error on first failing consumer", func(t *testing.T) {

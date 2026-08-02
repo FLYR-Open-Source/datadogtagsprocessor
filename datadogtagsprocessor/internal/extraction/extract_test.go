@@ -8,33 +8,6 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 )
 
-func TestEnsureDDTags(t *testing.T) {
-	t.Run("should create ddtags when it does not exist", func(t *testing.T) {
-		attributes := pcommon.NewMap()
-
-		ensureDDTags(attributes)
-
-		ddtags, ok := attributes.Get(ddtagsKey)
-
-		assert.True(t, ok)
-		assert.Empty(t, ddtags.Slice().AsRaw())
-	})
-
-	t.Run("should not overwrite existing ddtags", func(t *testing.T) {
-		attributes := pcommon.NewMap()
-
-		ddtags := attributes.PutEmptySlice(ddtagsKey)
-		ddtags.AppendEmpty().SetStr("existing:value")
-
-		ensureDDTags(attributes)
-
-		value, ok := attributes.Get(ddtagsKey)
-
-		assert.True(t, ok)
-		assert.Equal(t, []any{"existing:value"}, value.Slice().AsRaw())
-	})
-}
-
 func TestHasWildcardSuffix(t *testing.T) {
 	tests := []struct {
 		name              string
@@ -203,34 +176,100 @@ func TestLookupSelectedAttributes(t *testing.T) {
 	}
 }
 
-func TestAddDDTag(t *testing.T) {
-	t.Run("should add attribute as ddtags", func(t *testing.T) {
+func TestGetDDTags(t *testing.T) {
+	t.Run("should create ddtags when it does not exist", func(t *testing.T) {
 		attributes := pcommon.NewMap()
-		attributes.PutEmptySlice(ddtagsKey)
-		attributes.PutStr("service.name", "my-service")
 
-		addDDTag(attributes, "service.name")
-
-		ddtags, ok := attributes.Get(ddtagsKey)
-
-		assert.True(t, ok)
-		assert.Equal(
-			t,
-			[]any{"service.name:my-service"},
-			ddtags.Slice().AsRaw(),
-		)
-	})
-
-	t.Run("should do nothing when attribute does not exist", func(t *testing.T) {
-		attributes := pcommon.NewMap()
-		attributes.PutEmptySlice(ddtagsKey)
-
-		addDDTag(attributes, "service.name")
+		getDDTags(attributes)
 
 		ddtags, ok := attributes.Get(ddtagsKey)
 
 		assert.True(t, ok)
 		assert.Empty(t, ddtags.Slice().AsRaw())
+	})
+
+	t.Run("should not overwrite existing ddtags", func(t *testing.T) {
+		attributes := pcommon.NewMap()
+
+		ddtags := attributes.PutEmptySlice(ddtagsKey)
+		ddtags.AppendEmpty().SetStr("existing:value")
+
+		getDDTags(attributes)
+
+		value, ok := attributes.Get(ddtagsKey)
+
+		assert.True(t, ok)
+		assert.Equal(t, []any{"existing:value"}, value.Slice().AsRaw())
+	})
+}
+
+func TestAddDDTag(t *testing.T) {
+	attributes := pcommon.NewMap()
+
+	AddDDTags(attributes, []string{"service.name:my-service"})
+
+	ddtags, ok := attributes.Get(ddtagsKey)
+
+	assert.True(t, ok)
+	assert.Equal(
+		t,
+		[]any{"service.name:my-service"},
+		ddtags.Slice().AsRaw(),
+	)
+}
+
+func TestExtractAttributeKeys(t *testing.T) {
+	t.Run("exact attribute", func(t *testing.T) {
+		attributes := pcommon.NewMap()
+		attributes.PutStr("service.name", "my-service")
+		attributes.PutStr("service.version", "1.2.3")
+
+		cs := config.ContextStatements{
+			Attributes: []string{"service.name"},
+		}
+
+		keys, values := ExtractAttributeKeys(attributes, cs)
+
+		assert.ElementsMatch(t, []string{"service.name"}, keys)
+		assert.ElementsMatch(t, []string{"service.name:my-service"}, values)
+
+		// Resolving keys must not mutate the source attributes.
+		_, ok := attributes.Get("service.name")
+		assert.True(t, ok)
+	})
+
+	t.Run("wildcard namespace", func(t *testing.T) {
+		attributes := pcommon.NewMap()
+		attributes.PutStr("k8s.cluster.name", "cluster")
+		attributes.PutStr("k8s.cluster.uid", "123")
+		attributes.PutStr("k8s.pod.name", "pod")
+
+		cs := config.ContextStatements{
+			Attributes: []string{"k8s.cluster.*"},
+		}
+
+		keys, values := ExtractAttributeKeys(attributes, cs)
+
+		assert.ElementsMatch(t, []string{"k8s.cluster.name", "k8s.cluster.uid"}, keys)
+		assert.ElementsMatch(
+			t,
+			[]string{"k8s.cluster.name:cluster", "k8s.cluster.uid:123"},
+			values,
+		)
+	})
+
+	t.Run("non-existing attribute yields no keys or values", func(t *testing.T) {
+		attributes := pcommon.NewMap()
+		attributes.PutStr("service.name", "my-service")
+
+		cs := config.ContextStatements{
+			Attributes: []string{"service.missing"},
+		}
+
+		keys, values := ExtractAttributeKeys(attributes, cs)
+
+		assert.Empty(t, keys)
+		assert.Empty(t, values)
 	})
 }
 
@@ -243,7 +282,8 @@ func TestExtractAttributes_Merge(t *testing.T) {
 		Attributes: []string{"service.name"},
 	}
 
-	extractAttributes(attributes, cs, config.Merge)
+	_, values := ExtractAttributeKeys(attributes, cs)
+	AddDDTags(attributes, values)
 
 	value, ok := attributes.Get("service.name")
 	assert.True(t, ok)
@@ -269,7 +309,12 @@ func TestExtractAttributes_Move(t *testing.T) {
 		Attributes: []string{"service.name"},
 	}
 
-	extractAttributes(attributes, cs, config.Move)
+	keys, values := ExtractAttributeKeys(attributes, cs)
+	AddDDTags(attributes, values)
+
+	for _, key := range keys {
+		attributes.Remove(key)
+	}
 
 	_, exists := attributes.Get("service.name")
 	assert.False(t, exists)
@@ -298,7 +343,8 @@ func TestExtractAttributes_MergeWildcard(t *testing.T) {
 		Attributes: []string{"k8s.cluster.*"},
 	}
 
-	extractAttributes(attributes, cs, config.Merge)
+	_, values := ExtractAttributeKeys(attributes, cs)
+	AddDDTags(attributes, values)
 
 	ddtags, ok := attributes.Get(ddtagsKey)
 	assert.True(t, ok)
@@ -336,7 +382,12 @@ func TestExtractAttributes_MoveWildcard(t *testing.T) {
 		Attributes: []string{"k8s.cluster.*"},
 	}
 
-	extractAttributes(attributes, cs, config.Move)
+	keys, values := ExtractAttributeKeys(attributes, cs)
+	AddDDTags(attributes, values)
+
+	for _, key := range keys {
+		attributes.Remove(key)
+	}
 
 	ddtags, ok := attributes.Get(ddtagsKey)
 	assert.True(t, ok)
@@ -374,7 +425,8 @@ func TestExtractAttributes_PreservesExistingDDTags(t *testing.T) {
 		Attributes: []string{"service.name"},
 	}
 
-	extractAttributes(attributes, cs, config.Merge)
+	_, values := ExtractAttributeKeys(attributes, cs)
+	AddDDTags(attributes, values)
 
 	result, _ := attributes.Get(ddtagsKey)
 
@@ -386,4 +438,40 @@ func TestExtractAttributes_PreservesExistingDDTags(t *testing.T) {
 		},
 		result.Slice().AsRaw(),
 	)
+}
+
+func TestExtractAttributes_DifferentSourceAndDestination(t *testing.T) {
+	source := pcommon.NewMap()
+	source.PutStr("k8s.cluster.name", "cluster-a")
+	source.PutStr("k8s.cluster.uid", "123")
+
+	destination := pcommon.NewMap()
+
+	cs := config.ContextStatements{
+		Context:    config.Resource,
+		Attributes: []string{"k8s.cluster.*"},
+	}
+
+	keys, values := ExtractAttributeKeys(source, cs)
+	AddDDTags(destination, values)
+
+	for _, key := range keys {
+		source.Remove(key)
+	}
+
+	ddtags, ok := destination.Get(ddtagsKey)
+	assert.True(t, ok)
+	assert.ElementsMatch(
+		t,
+		[]any{"k8s.cluster.name:cluster-a", "k8s.cluster.uid:123"},
+		ddtags.Slice().AsRaw(),
+	)
+
+	// The source has no ddtags key of its own, and the moved keys are gone.
+	_, ok = source.Get(ddtagsKey)
+	assert.False(t, ok)
+	_, ok = source.Get("k8s.cluster.name")
+	assert.False(t, ok)
+	_, ok = source.Get("k8s.cluster.uid")
+	assert.False(t, ok)
 }

@@ -8,6 +8,23 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace"
 )
 
+func buildTraces() ptrace.Traces {
+	traces := ptrace.NewTraces()
+
+	rspans := traces.ResourceSpans().AppendEmpty()
+	rspans.Resource().Attributes().PutStr("k8s.cluster.name", "cluster-a")
+
+	sspans := rspans.ScopeSpans().AppendEmpty()
+
+	span1 := sspans.Spans().AppendEmpty()
+	span1.Attributes().PutStr("team", "payments")
+
+	span2 := sspans.Spans().AppendEmpty()
+	span2.Attributes().PutStr("team", "my-service")
+
+	return traces
+}
+
 func TestTraceStatements_IsContextValid(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -34,23 +51,6 @@ func TestTraceStatements_Shutdown(t *testing.T) {
 	assert.NoError(t, stmts.Shutdown(t.Context()))
 }
 
-func buildTraces() ptrace.Traces {
-	traces := ptrace.NewTraces()
-
-	rspans := traces.ResourceSpans().AppendEmpty()
-	rspans.Resource().Attributes().PutStr("k8s.cluster.name", "cluster-a")
-
-	sspans := rspans.ScopeSpans().AppendEmpty()
-
-	span1 := sspans.Spans().AppendEmpty()
-	span1.Attributes().PutStr("team", "payments")
-
-	span2 := sspans.Spans().AppendEmpty()
-	span2.Attributes().PutStr("team", "my-service")
-
-	return traces
-}
-
 func TestTraceStatements_Consume_ResourceContext(t *testing.T) {
 	traces := buildTraces()
 
@@ -65,16 +65,15 @@ func TestTraceStatements_Consume_ResourceContext(t *testing.T) {
 
 	rspans := traces.ResourceSpans().At(0)
 
-	// Resource-context statements tag the resource attributes themselves,
-	// applied once per resource regardless of how many spans it has.
-	ddtags, ok := rspans.Resource().Attributes().Get("ddtags")
-	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+	_, ok := rspans.Resource().Attributes().Get("ddtags")
+	assert.False(t, ok)
 
 	// Span attributes are untouched by a resource-context statement.
 	for i := 0; i < rspans.ScopeSpans().At(0).Spans().Len(); i++ {
-		_, ok := rspans.ScopeSpans().At(0).Spans().At(i).Attributes().Get("ddtags")
-		assert.False(t, ok)
+		ddtags, ok := rspans.ScopeSpans().At(0).Spans().At(i).Attributes().Get("ddtags")
+
+		assert.True(t, ok)
+		assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
 	}
 }
 
@@ -125,16 +124,16 @@ func TestTraceStatements_Consume_MultipleResources(t *testing.T) {
 	err := stmts.Consume(t.Context(), traces, config.Merge, cs)
 	assert.NoError(t, err)
 
-	ddtagsA, _ := rspansA.Resource().Attributes().Get("ddtags")
+	ddtagsA, _ := spanA.Attributes().Get("ddtags")
 	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsA.Slice().AsRaw())
 
-	ddtagsB, _ := rspansB.Resource().Attributes().Get("ddtags")
+	ddtagsB, _ := spanB.Attributes().Get("ddtags")
 	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-b"}, ddtagsB.Slice().AsRaw())
 
 	// Neither resource's tags leak onto the other's spans.
-	_, ok := spanA.Attributes().Get("ddtags")
+	_, ok := rspansA.Resource().Attributes().Get("ddtags")
 	assert.False(t, ok)
-	_, ok = spanB.Attributes().Get("ddtags")
+	_, ok = rspansB.Resource().Attributes().Get("ddtags")
 	assert.False(t, ok)
 }
 
@@ -167,9 +166,15 @@ func TestTraceStatements_Consume_ResourceContext_Move(t *testing.T) {
 	rspans.Resource().Attributes().PutStr("k8s.cluster.name", "cluster-a")
 
 	scopeSpans := rspans.ScopeSpans().AppendEmpty()
-	scopeSpans.Spans().AppendEmpty().Attributes().PutEmptySlice("noop")
-	scopeSpans.Spans().AppendEmpty().Attributes().PutEmptySlice("noop")
-	scopeSpans.Spans().AppendEmpty().Attributes().PutEmptySlice("noop")
+
+	span1 := scopeSpans.Spans().AppendEmpty()
+	span1.Attributes().PutEmptySlice("noop")
+
+	span2 := scopeSpans.Spans().AppendEmpty()
+	span2.Attributes().PutEmptySlice("noop")
+
+	span3 := scopeSpans.Spans().AppendEmpty()
+	span3.Attributes().PutEmptySlice("noop")
 
 	cs := config.ContextStatements{
 		Context:    config.Resource,
@@ -183,7 +188,15 @@ func TestTraceStatements_Consume_ResourceContext_Move(t *testing.T) {
 	_, ok := rspans.Resource().Attributes().Get("k8s.cluster.name")
 	assert.False(t, ok)
 
-	ddtags, ok := rspans.Resource().Attributes().Get("ddtags")
+	ddtags, ok := span1.Attributes().Get("ddtags")
+	assert.True(t, ok)
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+
+	ddtags, ok = span2.Attributes().Get("ddtags")
+	assert.True(t, ok)
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+
+	ddtags, ok = span3.Attributes().Get("ddtags")
 	assert.True(t, ok)
 	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
 }

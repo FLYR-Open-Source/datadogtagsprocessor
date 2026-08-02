@@ -2,6 +2,7 @@ package logs
 
 import (
 	"context"
+	"slices"
 
 	"go.opentelemetry.io/collector/pdata/plog"
 
@@ -28,10 +29,12 @@ func (*logStatements) Shutdown(ctx context.Context) error {
 func (*logStatements) Consume(ctx context.Context, plogs plog.Logs, mode config.Mode, cs config.ContextStatements) error {
 	for i := 0; i < plogs.ResourceLogs().Len(); i++ {
 		rlogs := plogs.ResourceLogs().At(i)
+		resourceAttributes := rlogs.Resource().Attributes()
 
+		var resourceAttributeKeys []string
+		var resourceAttributeKeyValues []string
 		if cs.Context == config.Resource {
-			extraction.Handle(rlogs.Resource().Attributes(), mode, cs)
-			continue
+			resourceAttributeKeys, resourceAttributeKeyValues = extraction.ExtractAttributeKeys(resourceAttributes, cs)
 		}
 
 		for j := 0; j < rlogs.ScopeLogs().Len(); j++ {
@@ -40,7 +43,28 @@ func (*logStatements) Consume(ctx context.Context, plogs plog.Logs, mode config.
 
 			for k := 0; k < logs.Len(); k++ {
 				log := logs.At(k)
-				extraction.Handle(log.Attributes(), mode, cs)
+				logAttributes := log.Attributes()
+
+				logAttributeKeys := []string{}
+				logAttributeKeyValues := []string{}
+
+				if cs.Context == config.Log {
+					logAttributeKeys, logAttributeKeyValues = extraction.ExtractAttributeKeys(logAttributes, cs)
+				}
+
+				extraction.AddDDTags(logAttributes, slices.Concat(resourceAttributeKeyValues, logAttributeKeyValues))
+
+				if mode == config.Move && cs.Context == config.Log {
+					for _, key := range logAttributeKeys {
+						logAttributes.Remove(key)
+					}
+				}
+			}
+		}
+
+		if mode == config.Move && cs.Context == config.Resource && len(resourceAttributeKeys) > 0 {
+			for _, key := range resourceAttributeKeys {
+				resourceAttributes.Remove(key)
 			}
 		}
 	}

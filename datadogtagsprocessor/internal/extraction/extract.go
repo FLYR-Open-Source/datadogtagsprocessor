@@ -12,11 +12,8 @@ const (
 	ddtagsKey = "ddtags"
 )
 
-func ensureDDTags(attributes pcommon.Map) {
-	if _, ok := attributes.Get(ddtagsKey); !ok {
-		attributes.PutEmptySlice(ddtagsKey)
-	}
-}
+type ResourceAttributes = pcommon.Map
+type Attributes = pcommon.Map
 
 func hasWildcardSuffix(attribute string) (string, bool) {
 	return strings.CutSuffix(attribute, ".*")
@@ -63,22 +60,37 @@ func lookupSelectedAttributes(root *node, attributes pcommon.Map, selected strin
 	return nil
 }
 
-func addDDTag(attributes pcommon.Map, key string) {
-	value, ok := attributes.Get(key)
-	if !ok {
-		return
+func getDDTags(attributes pcommon.Map) pcommon.Slice {
+	value, ok := attributes.Get(ddtagsKey)
+	if ok {
+		return value.Slice()
 	}
 
-	ddtags, _ := attributes.Get(ddtagsKey)
-
-	ddtags.Slice().AppendEmpty().SetStr(
-		fmt.Sprintf("%s:%s", key, value.AsString()),
-	)
+	return attributes.PutEmptySlice(ddtagsKey)
 }
 
-func extractAttributes(attributes pcommon.Map, cs config.ContextStatements, mode config.Mode) {
-	ensureDDTags(attributes)
+func getTagsFormatted(attributes pcommon.Map, keys []string) []string {
+	var values []string
 
+	for _, key := range keys {
+		value, ok := attributes.Get(key)
+		if ok {
+			values = append(values, fmt.Sprintf("%s:%s", key, value.AsString()))
+		}
+	}
+
+	return values
+}
+
+func AddDDTags(attributes Attributes, values []string) {
+	ddtags := getDDTags(attributes)
+
+	for _, value := range values {
+		ddtags.AppendEmpty().SetStr(value)
+	}
+}
+
+func ExtractAttributeKeys(attributes pcommon.Map, cs config.ContextStatements) (attributeKeys, ddTagsFormat []string) {
 	var lookup *node
 	if namespaces := wildcardNamespaces(cs.Attributes); len(namespaces) > 0 {
 		lookup = buildAttributeLookup(attributes, namespaces)
@@ -86,13 +98,9 @@ func extractAttributes(attributes pcommon.Map, cs config.ContextStatements, mode
 
 	for _, selectedAttribute := range cs.Attributes {
 		keys := lookupSelectedAttributes(lookup, attributes, selectedAttribute)
-
-		for _, key := range keys {
-			addDDTag(attributes, key)
-
-			if mode == config.Move {
-				attributes.Remove(key)
-			}
-		}
+		attributeKeys = append(attributeKeys, keys...)
 	}
+
+	ddTagsFormat = getTagsFormatted(attributes, attributeKeys)
+	return attributeKeys, ddTagsFormat
 }

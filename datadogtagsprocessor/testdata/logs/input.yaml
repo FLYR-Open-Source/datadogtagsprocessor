@@ -50,7 +50,7 @@ resourceLogs:
 
         - key: deployment.environment.name
           value:
-            stringValue: production
+            stringValue: prd
 
         - key: cloud.provider
           value:
@@ -67,7 +67,7 @@ resourceLogs:
 
         - key: host.name
           value:
-            stringValue: gke-production-eu-default-pool-abc123
+            stringValue: gke-cluster-a-default-pool-abc123
 
     scopeLogs:
       - logRecords:
