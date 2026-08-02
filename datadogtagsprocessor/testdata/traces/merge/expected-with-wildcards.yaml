@@ -7,24 +7,51 @@ resourceSpans:
         - key: k8s.cluster.uid
           value:
             stringValue: 12345678-abcd-4ef0-9012-123456789abc
+        - key: k8s.container.name
+          value:
+            stringValue: main
+        - key: k8s.deployment.name
+          value:
+            stringValue: my-deployment
         - key: k8s.deployment.uid
           value:
             stringValue: a3082e7c-89ab-4690-ab1a-19b42aa7c359
+        - key: k8s.namespace.name
+          value:
+            stringValue: my-namespace
         - key: k8s.node.name
           value:
             stringValue: gke-cluster-a-default-pool-abc123
+        - key: k8s.pod.name
+          value:
+            stringValue: my-deployment-59ddb85bd5-xyz12
         - key: k8s.pod.uid
           value:
             stringValue: 12345678-90ab-cdef-1234-567890abcdef
+        - key: k8s.replicaset.name
+          value:
+            stringValue: my-deployment-59ddb85bd5
         - key: k8s.replicaset.uid
           value:
             stringValue: 50f88e0d-0bf7-4087-b2f2-357cbbce9459
-        - key: service.instance.id
+
+        - key: service.name
           value:
-            stringValue: my-namespace.my-service-59ddb85bd5-xyz12.main
+            stringValue: my-service
         - key: service.namespace
           value:
             stringValue: my-namespace
+        - key: service.instance.id
+          value:
+            stringValue: my-namespace.my-service-59ddb85bd5-xyz12.main
+        - key: service.version
+          value:
+            stringValue: 1.2.3
+
+        - key: deployment.environment.name
+          value:
+            stringValue: prd
+
         - key: cloud.provider
           value:
             stringValue: gcp
@@ -37,6 +64,10 @@ resourceSpans:
         - key: cloud.availability_zone
           value:
             stringValue: europe-west4-a
+
+        - key: host.name
+          value:
+            stringValue: gke-cluster-a-default-pool-abc123
 
     scopeSpans:
       - spans:
@@ -57,6 +88,9 @@ resourceSpans:
               - key: request.id
                 value:
                   stringValue: req-abc123
+              - key: team
+                value:
+                  stringValue: order
               - key: ddtags
                 value:
                   arrayValue:
@@ -64,12 +98,20 @@ resourceSpans:
                       - stringValue: team:order
                       - stringValue: deployment.environment.name:prd
                       - stringValue: host.name:gke-cluster-a-default-pool-abc123
+                      - stringValue: k8s.cluster.name:cluster-a
+                      - stringValue: k8s.cluster.uid:12345678-abcd-4ef0-9012-123456789abc
                       - stringValue: k8s.container.name:main
                       - stringValue: k8s.deployment.name:my-deployment
+                      - stringValue: k8s.deployment.uid:a3082e7c-89ab-4690-ab1a-19b42aa7c359
                       - stringValue: k8s.namespace.name:my-namespace
+                      - stringValue: k8s.node.name:gke-cluster-a-default-pool-abc123
                       - stringValue: k8s.pod.name:my-deployment-59ddb85bd5-xyz12
+                      - stringValue: k8s.pod.uid:12345678-90ab-cdef-1234-567890abcdef
                       - stringValue: k8s.replicaset.name:my-deployment-59ddb85bd5
+                      - stringValue: k8s.replicaset.uid:50f88e0d-0bf7-4087-b2f2-357cbbce9459
+                      - stringValue: service.instance.id:my-namespace.my-service-59ddb85bd5-xyz12.main
                       - stringValue: service.name:my-service
+                      - stringValue: service.namespace:my-namespace
                       - stringValue: service.version:1.2.3
 
           - name: POST /api/orders/67890
@@ -89,6 +131,9 @@ resourceSpans:
               - key: request.id
                 value:
                   stringValue: req-def456
+              - key: team
+                value:
+                  stringValue: order
               - key: ddtags
                 value:
                   arrayValue:
@@ -96,10 +141,18 @@ resourceSpans:
                       - stringValue: team:order
                       - stringValue: deployment.environment.name:prd
                       - stringValue: host.name:gke-cluster-a-default-pool-abc123
+                      - stringValue: k8s.cluster.name:cluster-a
+                      - stringValue: k8s.cluster.uid:12345678-abcd-4ef0-9012-123456789abc
                       - stringValue: k8s.container.name:main
                       - stringValue: k8s.deployment.name:my-deployment
+                      - stringValue: k8s.deployment.uid:a3082e7c-89ab-4690-ab1a-19b42aa7c359
                       - stringValue: k8s.namespace.name:my-namespace
+                      - stringValue: k8s.node.name:gke-cluster-a-default-pool-abc123
                       - stringValue: k8s.pod.name:my-deployment-59ddb85bd5-xyz12
+                      - stringValue: k8s.pod.uid:12345678-90ab-cdef-1234-567890abcdef
                       - stringValue: k8s.replicaset.name:my-deployment-59ddb85bd5
+                      - stringValue: k8s.replicaset.uid:50f88e0d-0bf7-4087-b2f2-357cbbce9459
+                      - stringValue: service.instance.id:my-namespace.my-service-59ddb85bd5-xyz12.main
                       - stringValue: service.name:my-service
+                      - stringValue: service.namespace:my-namespace
                       - stringValue: service.version:1.2.3

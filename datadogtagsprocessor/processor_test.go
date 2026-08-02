@@ -59,6 +59,46 @@ func TestProcessLogs_Merge_WithoutWildcards(t *testing.T) {
 	require.NoError(t, plogtest.CompareLogs(expected, actual[0]))
 }
 
+func TestProcessLogs_Merge_WithWildcards(t *testing.T) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
+	oCfg := cfg.(*Config)
+
+	oCfg.Mode = config.Merge
+	oCfg.LogStatements = []config.ContextStatements{
+		{
+			Context: "log",
+			Attributes: []string{
+				"team",
+			},
+		},
+		{
+			Context: "resource",
+			Attributes: []string{
+				"k8s.*",
+				"service.*",
+				"deployment.environment.name",
+				"host.name",
+			},
+		},
+	}
+	sink := new(consumertest.LogsSink)
+	p, err := factory.CreateLogs(t.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
+	require.NoError(t, err)
+
+	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
+	require.NoError(t, err)
+	expected, err := golden.ReadLogs(filepath.Join("testdata", "logs", "merge", "expected-with-wildcards.yaml"))
+	require.NoError(t, err)
+
+	require.NoError(t, p.ConsumeLogs(t.Context(), input))
+
+	actual := sink.AllLogs()
+	require.Len(t, actual, 1)
+
+	require.NoError(t, plogtest.CompareLogs(expected, actual[0]))
+}
+
 func TestProcessLogs_Move_WithoutWildcards(t *testing.T) {
 	factory := NewFactory()
 	cfg := factory.CreateDefaultConfig()
@@ -94,6 +134,46 @@ func TestProcessLogs_Move_WithoutWildcards(t *testing.T) {
 	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
 	require.NoError(t, err)
 	expected, err := golden.ReadLogs(filepath.Join("testdata", "logs", "move", "expected-without-wildcards.yaml"))
+	require.NoError(t, err)
+
+	require.NoError(t, p.ConsumeLogs(t.Context(), input))
+
+	actual := sink.AllLogs()
+	require.Len(t, actual, 1)
+
+	require.NoError(t, plogtest.CompareLogs(expected, actual[0]))
+}
+
+func TestProcessLogs_Move_WithWildcards(t *testing.T) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
+	oCfg := cfg.(*Config)
+
+	oCfg.Mode = config.Move
+	oCfg.LogStatements = []config.ContextStatements{
+		{
+			Context: "log",
+			Attributes: []string{
+				"team",
+			},
+		},
+		{
+			Context: "resource",
+			Attributes: []string{
+				"k8s.*",
+				"service.*",
+				"deployment.environment.name",
+				"host.name",
+			},
+		},
+	}
+	sink := new(consumertest.LogsSink)
+	p, err := factory.CreateLogs(t.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
+	require.NoError(t, err)
+
+	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
+	require.NoError(t, err)
+	expected, err := golden.ReadLogs(filepath.Join("testdata", "logs", "move", "expected-with-wildcards.yaml"))
 	require.NoError(t, err)
 
 	require.NoError(t, p.ConsumeLogs(t.Context(), input))
@@ -149,6 +229,46 @@ func TestProcessTraces_Merge_WithoutWildcards(t *testing.T) {
 	require.NoError(t, ptracetest.CompareTraces(expected, actual[0]))
 }
 
+func TestProcessTraces_Merge_WithWildcards(t *testing.T) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
+	oCfg := cfg.(*Config)
+
+	oCfg.Mode = config.Merge
+	oCfg.TraceStatements = []config.ContextStatements{
+		{
+			Context: "span",
+			Attributes: []string{
+				"team",
+			},
+		},
+		{
+			Context: "resource",
+			Attributes: []string{
+				"k8s.*",
+				"service.*",
+				"deployment.environment.name",
+				"host.name",
+			},
+		},
+	}
+	sink := new(consumertest.TracesSink)
+	p, err := factory.CreateTraces(t.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
+	require.NoError(t, err)
+
+	input, err := golden.ReadTraces(filepath.Join("testdata", "traces", "input.yaml"))
+	require.NoError(t, err)
+	expected, err := golden.ReadTraces(filepath.Join("testdata", "traces", "merge", "expected-with-wildcards.yaml"))
+	require.NoError(t, err)
+
+	require.NoError(t, p.ConsumeTraces(t.Context(), input))
+
+	actual := sink.AllTraces()
+	require.Len(t, actual, 1)
+
+	require.NoError(t, ptracetest.CompareTraces(expected, actual[0]))
+}
+
 func TestProcessTraces_Move_WithoutWildcards(t *testing.T) {
 	factory := NewFactory()
 	cfg := factory.CreateDefaultConfig()
@@ -184,6 +304,46 @@ func TestProcessTraces_Move_WithoutWildcards(t *testing.T) {
 	input, err := golden.ReadTraces(filepath.Join("testdata", "traces", "input.yaml"))
 	require.NoError(t, err)
 	expected, err := golden.ReadTraces(filepath.Join("testdata", "traces", "move", "expected-without-wildcards.yaml"))
+	require.NoError(t, err)
+
+	require.NoError(t, p.ConsumeTraces(t.Context(), input))
+
+	actual := sink.AllTraces()
+	require.Len(t, actual, 1)
+
+	require.NoError(t, ptracetest.CompareTraces(expected, actual[0]))
+}
+
+func TestProcessTraces_Move_WithWildcards(t *testing.T) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
+	oCfg := cfg.(*Config)
+
+	oCfg.Mode = config.Move
+	oCfg.TraceStatements = []config.ContextStatements{
+		{
+			Context: "span",
+			Attributes: []string{
+				"team",
+			},
+		},
+		{
+			Context: "resource",
+			Attributes: []string{
+				"k8s.*",
+				"service.*",
+				"deployment.environment.name",
+				"host.name",
+			},
+		},
+	}
+	sink := new(consumertest.TracesSink)
+	p, err := factory.CreateTraces(t.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
+	require.NoError(t, err)
+
+	input, err := golden.ReadTraces(filepath.Join("testdata", "traces", "input.yaml"))
+	require.NoError(t, err)
+	expected, err := golden.ReadTraces(filepath.Join("testdata", "traces", "move", "expected-with-wildcards.yaml"))
 	require.NoError(t, err)
 
 	require.NoError(t, p.ConsumeTraces(t.Context(), input))

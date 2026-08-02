@@ -93,15 +93,15 @@ resourceLogs:
                   arrayValue:
                     values:
                       - stringValue: team:order
+                      - stringValue: deployment.environment.name:prd
+                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
+                      - stringValue: k8s.container.name:main
                       - stringValue: k8s.deployment.name:my-deployment
                       - stringValue: k8s.namespace.name:my-namespace
                       - stringValue: k8s.pod.name:my-deployment-59ddb85bd5-xyz12
-                      - stringValue: k8s.container.name:main
                       - stringValue: k8s.replicaset.name:my-deployment-59ddb85bd5
                       - stringValue: service.name:my-service
                       - stringValue: service.version:1.2.3
-                      - stringValue: deployment.environment.name:prd
-                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
 
           - body:
               stringValue: "Successfully retrieved order 67890"
@@ -129,12 +129,12 @@ resourceLogs:
                   arrayValue:
                     values:
                       - stringValue: team:order
+                      - stringValue: deployment.environment.name:prd
+                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
+                      - stringValue: k8s.container.name:main
                       - stringValue: k8s.deployment.name:my-deployment
                       - stringValue: k8s.namespace.name:my-namespace
                       - stringValue: k8s.pod.name:my-deployment-59ddb85bd5-xyz12
-                      - stringValue: k8s.container.name:main
                       - stringValue: k8s.replicaset.name:my-deployment-59ddb85bd5
                       - stringValue: service.name:my-service
                       - stringValue: service.version:1.2.3
-                      - stringValue: deployment.environment.name:prd
-                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
