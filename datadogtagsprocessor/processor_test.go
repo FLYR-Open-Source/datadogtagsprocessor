@@ -75,6 +75,7 @@ func sortTracesDDTags(traces ptrace.Traces) {
 	}
 }
 
+// Test Logs Processing
 func TestProcessLogs_Merge_WithoutWildcards(t *testing.T) {
 	factory := NewFactory()
 	cfg := factory.CreateDefaultConfig()
@@ -257,6 +258,7 @@ func TestProcessLogs_Move_WithWildcards(t *testing.T) {
 	require.NoError(t, plogtest.CompareLogs(expected, actual[0]))
 }
 
+// Test Trace Processing
 func TestProcessTraces_Merge_WithoutWildcards(t *testing.T) {
 	factory := NewFactory()
 	cfg := factory.CreateDefaultConfig()
@@ -437,4 +439,314 @@ func TestProcessTraces_Move_WithWildcards(t *testing.T) {
 	sortTracesDDTags(actual[0])
 
 	require.NoError(t, ptracetest.CompareTraces(expected, actual[0]))
+}
+
+// Log Processing Benchmarks
+func BenchmarkLogs_Merge_WithoutWildcards(b *testing.B) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
+	oCfg := cfg.(*Config)
+
+	oCfg.Mode = config.Merge
+	oCfg.LogStatements = []config.ContextStatements{
+		{
+			Context: "log",
+			Attributes: []string{
+				"team",
+			},
+		},
+		{
+			Context: "resource",
+			Attributes: []string{
+				"k8s.deployment.name",
+				"k8s.namespace.name",
+				"k8s.pod.name",
+				"k8s.container.name",
+				"k8s.replicaset.name",
+				"service.name",
+				"service.version",
+				"deployment.environment.name",
+				"host.name",
+			},
+		},
+	}
+
+	sink := new(consumertest.LogsSink)
+	p, err := factory.CreateLogs(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
+	require.NoError(b, err)
+
+	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
+	require.NoError(b, err)
+
+	for b.Loop() {
+		require.NoError(b, p.ConsumeLogs(b.Context(), input))
+	}
+}
+
+func BenchmarkLogs_Merge_WithWildcards(b *testing.B) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
+	oCfg := cfg.(*Config)
+
+	oCfg.Mode = config.Merge
+	oCfg.LogStatements = []config.ContextStatements{
+		{
+			Context: "log",
+			Attributes: []string{
+				"team",
+			},
+		},
+		{
+			Context: "resource",
+			Attributes: []string{
+				"k8s.*",
+				"service.*",
+				"deployment.environment.name",
+				"host.name",
+			},
+		},
+	}
+
+	sink := new(consumertest.LogsSink)
+	p, err := factory.CreateLogs(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
+	require.NoError(b, err)
+
+	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
+	require.NoError(b, err)
+
+	for b.Loop() {
+		require.NoError(b, p.ConsumeLogs(b.Context(), input))
+	}
+}
+
+func BenchmarkLogs_Move_WithoutWildcards(b *testing.B) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
+	oCfg := cfg.(*Config)
+
+	oCfg.Mode = config.Move
+	oCfg.LogStatements = []config.ContextStatements{
+		{
+			Context: "log",
+			Attributes: []string{
+				"team",
+			},
+		},
+		{
+			Context: "resource",
+			Attributes: []string{
+				"k8s.deployment.name",
+				"k8s.namespace.name",
+				"k8s.pod.name",
+				"k8s.container.name",
+				"k8s.replicaset.name",
+				"service.name",
+				"service.version",
+				"deployment.environment.name",
+				"host.name",
+			},
+		},
+	}
+
+	sink := new(consumertest.LogsSink)
+	p, err := factory.CreateLogs(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
+	require.NoError(b, err)
+
+	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
+	require.NoError(b, err)
+
+	for b.Loop() {
+		require.NoError(b, p.ConsumeLogs(b.Context(), input))
+	}
+}
+
+func BenchmarkLogs_Move_WithWildcards(b *testing.B) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
+	oCfg := cfg.(*Config)
+
+	oCfg.Mode = config.Move
+	oCfg.LogStatements = []config.ContextStatements{
+		{
+			Context: "log",
+			Attributes: []string{
+				"team",
+			},
+		},
+		{
+			Context: "resource",
+			Attributes: []string{
+				"k8s.*",
+				"service.*",
+				"deployment.environment.name",
+				"host.name",
+			},
+		},
+	}
+
+	sink := new(consumertest.LogsSink)
+	p, err := factory.CreateLogs(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
+	require.NoError(b, err)
+
+	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
+	require.NoError(b, err)
+
+	for b.Loop() {
+		require.NoError(b, p.ConsumeLogs(b.Context(), input))
+	}
+}
+
+// Trace Processing Benchmarks
+func BenchmarkTraces_Merge_WithoutWildcards(b *testing.B) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
+	oCfg := cfg.(*Config)
+
+	oCfg.Mode = config.Merge
+	oCfg.TraceStatements = []config.ContextStatements{
+		{
+			Context: "span",
+			Attributes: []string{
+				"team",
+			},
+		},
+		{
+			Context: "resource",
+			Attributes: []string{
+				"k8s.deployment.name",
+				"k8s.namespace.name",
+				"k8s.pod.name",
+				"k8s.container.name",
+				"k8s.replicaset.name",
+				"service.name",
+				"service.version",
+				"deployment.environment.name",
+				"host.name",
+			},
+		},
+	}
+
+	sink := new(consumertest.LogsSink)
+	p, err := factory.CreateLogs(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
+	require.NoError(b, err)
+
+	input, err := golden.ReadLogs(filepath.Join("testdata", "traces", "input.yaml"))
+	require.NoError(b, err)
+
+	for b.Loop() {
+		require.NoError(b, p.ConsumeLogs(b.Context(), input))
+	}
+}
+
+func BenchmarkTraces_Merge_WithWildcards(b *testing.B) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
+	oCfg := cfg.(*Config)
+
+	oCfg.Mode = config.Merge
+	oCfg.TraceStatements = []config.ContextStatements{
+		{
+			Context: "span",
+			Attributes: []string{
+				"team",
+			},
+		},
+		{
+			Context: "resource",
+			Attributes: []string{
+				"k8s.*",
+				"service.*",
+				"deployment.environment.name",
+				"host.name",
+			},
+		},
+	}
+
+	sink := new(consumertest.LogsSink)
+	p, err := factory.CreateLogs(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
+	require.NoError(b, err)
+
+	input, err := golden.ReadLogs(filepath.Join("testdata", "traces", "input.yaml"))
+	require.NoError(b, err)
+
+	for b.Loop() {
+		require.NoError(b, p.ConsumeLogs(b.Context(), input))
+	}
+}
+
+func BenchmarkTraces_Move_WithoutWildcards(b *testing.B) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
+	oCfg := cfg.(*Config)
+
+	oCfg.Mode = config.Move
+	oCfg.TraceStatements = []config.ContextStatements{
+		{
+			Context: "span",
+			Attributes: []string{
+				"team",
+			},
+		},
+		{
+			Context: "resource",
+			Attributes: []string{
+				"k8s.deployment.name",
+				"k8s.namespace.name",
+				"k8s.pod.name",
+				"k8s.container.name",
+				"k8s.replicaset.name",
+				"service.name",
+				"service.version",
+				"deployment.environment.name",
+				"host.name",
+			},
+		},
+	}
+
+	sink := new(consumertest.LogsSink)
+	p, err := factory.CreateLogs(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
+	require.NoError(b, err)
+
+	input, err := golden.ReadLogs(filepath.Join("testdata", "traces", "input.yaml"))
+	require.NoError(b, err)
+
+	for b.Loop() {
+		require.NoError(b, p.ConsumeLogs(b.Context(), input))
+	}
+}
+
+func BenchmarkTraces_Move_WithWildcards(b *testing.B) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
+	oCfg := cfg.(*Config)
+
+	oCfg.Mode = config.Move
+	oCfg.TraceStatements = []config.ContextStatements{
+		{
+			Context: "span",
+			Attributes: []string{
+				"team",
+			},
+		},
+		{
+			Context: "resource",
+			Attributes: []string{
+				"k8s.*",
+				"service.*",
+				"deployment.environment.name",
+				"host.name",
+			},
+		},
+	}
+
+	sink := new(consumertest.LogsSink)
+	p, err := factory.CreateLogs(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
+	require.NoError(b, err)
+
+	input, err := golden.ReadLogs(filepath.Join("testdata", "traces", "input.yaml"))
+	require.NoError(b, err)
+
+	for b.Loop() {
+		require.NoError(b, p.ConsumeLogs(b.Context(), input))
+	}
 }

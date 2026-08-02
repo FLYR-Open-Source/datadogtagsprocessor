@@ -1,7 +1,6 @@
 package extraction
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/config"
@@ -75,7 +74,7 @@ func getTagsFormatted(attributes pcommon.Map, keys []string) []string {
 	for _, key := range keys {
 		value, ok := attributes.Get(key)
 		if ok {
-			values = append(values, fmt.Sprintf("%s:%s", key, value.AsString()))
+			values = append(values, key+":"+value.AsString())
 		}
 	}
 
