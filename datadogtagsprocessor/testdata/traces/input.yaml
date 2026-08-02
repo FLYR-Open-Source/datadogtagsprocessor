@@ -1,4 +1,4 @@
-resourceLogs:
+resourceSpans:
   - resource:
       attributes:
         - key: k8s.cluster.name
@@ -69,14 +69,13 @@ resourceLogs:
           value:
             stringValue: gke-cluster-a-default-pool-abc123
 
-    scopeLogs:
-      - logRecords:
-          - body:
-              stringValue: "Successfully retrieved order 12345"
+    scopeSpans:
+      - spans:
+          - name: GET /api/orders/12345
+            kind: SPAN_KIND_SERVER
+            traceId: 5b8aa5a2d2c872e8321cf37308d69df2
+            spanId: 051581bf3f2f4e9a
             attributes:
-              - key: log.file.name
-                value:
-                  stringValue: application.log
               - key: http.request.method
                 value:
                   stringValue: GET
@@ -93,12 +92,11 @@ resourceLogs:
                 value:
                   stringValue: order
 
-          - body:
-              stringValue: "Successfully retrieved order 67890"
+          - name: POST /api/orders/67890
+            kind: SPAN_KIND_SERVER
+            traceId: 7b8aa5a2d2c872e8321cf37308d69df3
+            spanId: 161581bf3f2f4e9b
             attributes:
-              - key: log.file.name
-                value:
-                  stringValue: application.log
               - key: http.request.method
                 value:
                   stringValue: POST
