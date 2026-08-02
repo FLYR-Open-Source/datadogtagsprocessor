@@ -8,7 +8,7 @@ import (
 
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/config"
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/extraction"
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/validation"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/validator"
 )
 
 type logStatements struct{}
@@ -72,6 +72,6 @@ func (*logStatements) Consume(ctx context.Context, plogs plog.Logs, cs config.Co
 	return nil
 }
 
-func NewLogParserCollection() *validation.ParserCollection[plog.Logs] {
-	return validation.NewParserCollection(&logStatements{})
+func NewLogParserCollection() *validator.ParserCollection[plog.Logs] {
+	return validator.NewParserCollection(&logStatements{})
 }

@@ -219,13 +219,13 @@ func TestNewLogParserCollection(t *testing.T) {
 	parser := NewLogParserCollection()
 	assert.NotNil(t, parser)
 
-	err := parser.Parse(config.ContextStatements{
+	err := parser.Validate(config.ContextStatements{
 		Context:    config.Log,
 		Attributes: []string{"team"},
 	})
 	assert.NoError(t, err)
 
-	err = parser.Parse(config.ContextStatements{
+	err = parser.Validate(config.ContextStatements{
 		Context:    config.Span,
 		Attributes: []string{"team"},
 	})

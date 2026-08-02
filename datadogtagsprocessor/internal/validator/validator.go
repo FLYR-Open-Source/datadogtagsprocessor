@@ -1,4 +1,4 @@
-package validation
+package validator
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ func NewParserCollection[T any](consumer config.Consumer[T]) *ParserCollection[T
 	}
 }
 
-func (p *ParserCollection[T]) Parse(cs config.ContextStatements) error {
+func (p *ParserCollection[T]) Validate(cs config.ContextStatements) error {
 
 	if cs.Context.IsEmpty() {
 		return fmt.Errorf("context is empty for statements: %v", cs.Attributes)

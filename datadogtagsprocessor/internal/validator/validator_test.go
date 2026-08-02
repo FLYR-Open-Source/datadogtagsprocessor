@@ -1,4 +1,4 @@
-package validation
+package validator
 
 import (
 	"context"
@@ -74,7 +74,7 @@ func TestNewParserCollection(t *testing.T) {
 			consumer := newMockConsumer()
 			parserCollection := NewParserCollection(consumer)
 
-			err := parserCollection.Parse(newContextStatements(test.context, test.attributes))
+			err := parserCollection.Validate(newContextStatements(test.context, test.attributes))
 			assert.Equal(t, test.error, err)
 			assert.Equal(t, consumer, parserCollection.consumer)
 		})

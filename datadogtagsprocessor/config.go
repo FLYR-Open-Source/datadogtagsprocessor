@@ -24,7 +24,7 @@ func (c *Config) Validate() error {
 		parser := traces.NewTraceParserCollection()
 
 		for _, cs := range c.TraceStatements {
-			err := parser.Parse(cs)
+			err := parser.Validate(cs)
 
 			if err != nil {
 				errors = multierr.Append(errors, err)
@@ -36,7 +36,7 @@ func (c *Config) Validate() error {
 		parser := logs.NewLogParserCollection()
 
 		for _, cs := range c.LogStatements {
-			err := parser.Parse(cs)
+			err := parser.Validate(cs)
 
 			if err != nil {
 				errors = multierr.Append(errors, err)

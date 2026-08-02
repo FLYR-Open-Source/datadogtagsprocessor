@@ -220,13 +220,13 @@ func TestNewTraceParserCollection(t *testing.T) {
 	parser := NewTraceParserCollection()
 	assert.NotNil(t, parser)
 
-	err := parser.Parse(config.ContextStatements{
+	err := parser.Validate(config.ContextStatements{
 		Context:    config.Span,
 		Attributes: []string{"team"},
 	})
 	assert.NoError(t, err)
 
-	err = parser.Parse(config.ContextStatements{
+	err = parser.Validate(config.ContextStatements{
 		Context:    config.Log,
 		Attributes: []string{"team"},
 	})

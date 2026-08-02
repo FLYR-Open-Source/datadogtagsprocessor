@@ -8,7 +8,7 @@ import (
 
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/config"
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/extraction"
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/validation"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/validator"
 )
 
 type traceStatements struct{}
@@ -71,6 +71,6 @@ func (*traceStatements) Consume(ctx context.Context, ptraces ptrace.Traces, cs c
 	return nil
 }
 
-func NewTraceParserCollection() *validation.ParserCollection[ptrace.Traces] {
-	return validation.NewParserCollection(&traceStatements{})
+func NewTraceParserCollection() *validator.ParserCollection[ptrace.Traces] {
+	return validator.NewParserCollection(&traceStatements{})
 }
