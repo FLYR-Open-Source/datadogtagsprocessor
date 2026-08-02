@@ -1,0 +1,37 @@
+datadogtags:
+  mode: merge
+  trace_statements:
+    - context: resource
+      attributes:
+      - k8s.*
+      - host.cpu.cache.l2.sizestring
+    - context: span
+      attributes:
+      - team
+  log_statements:
+    - context: resource
+      attributes:
+      - k8s.*
+      - host.cpu.cache.l2.sizestring
+    - context: log
+      attributes:
+      - team
+
+datadogtags/with_empty_context:
+  mode: merge
+  trace_statements:
+    - attributes:
+      - k8s.*
+      - host.cpu.cache.l2.sizestring
+  log_statements:
+    - attributes:
+      - team
+
+datadogtags/with_empty_attributes:
+  mode: merge
+  trace_statements:
+    - context: resource
+      attributes: []
+  log_statements:
+    - context: log
+      attributes: []

@@ -1,0 +1,116 @@
+resourceLogs:
+  - resource:
+      attributes:
+        - key: k8s.cluster.name
+          value:
+            stringValue: cluster-a
+        - key: k8s.cluster.uid
+          value:
+            stringValue: 12345678-abcd-4ef0-9012-123456789abc
+        - key: k8s.container.name
+          value:
+            stringValue: main
+        - key: k8s.deployment.name
+          value:
+            stringValue: my-deployment
+        - key: k8s.deployment.uid
+          value:
+            stringValue: a3082e7c-89ab-4690-ab1a-19b42aa7c359
+        - key: k8s.namespace.name
+          value:
+            stringValue: my-namespace
+        - key: k8s.node.name
+          value:
+            stringValue: gke-production-eu-default-pool-abc123
+        - key: k8s.pod.name
+          value:
+            stringValue: my-deployment-59ddb85bd5-xyz12
+        - key: k8s.pod.uid
+          value:
+            stringValue: 12345678-90ab-cdef-1234-567890abcdef
+        - key: k8s.replicaset.name
+          value:
+            stringValue: my-deployment-59ddb85bd5
+        - key: k8s.replicaset.uid
+          value:
+            stringValue: 50f88e0d-0bf7-4087-b2f2-357cbbce9459
+
+        - key: service.name
+          value:
+            stringValue: my-service
+        - key: service.namespace
+          value:
+            stringValue: my-namespace
+        - key: service.instance.id
+          value:
+            stringValue: my-namespace.my-service-59ddb85bd5-xyz12.main
+        - key: service.version
+          value:
+            stringValue: 1.2.3
+
+        - key: deployment.environment.name
+          value:
+            stringValue: production
+
+        - key: cloud.provider
+          value:
+            stringValue: gcp
+        - key: cloud.platform
+          value:
+            stringValue: gcp_kubernetes_engine
+        - key: cloud.region
+          value:
+            stringValue: europe-west4
+        - key: cloud.availability_zone
+          value:
+            stringValue: europe-west4-a
+
+        - key: host.name
+          value:
+            stringValue: gke-production-eu-default-pool-abc123
+
+    scopeLogs:
+      - logRecords:
+          - body:
+              stringValue: "Successfully retrieved order 12345"
+            attributes:
+              - key: log.file.name
+                value:
+                  stringValue: application.log
+              - key: http.request.method
+                value:
+                  stringValue: GET
+              - key: url.path
+                value:
+                  stringValue: /api/orders/12345
+              - key: http.response.status_code
+                value:
+                  stringValue: "200"
+              - key: request.id
+                value:
+                  stringValue: req-abc123
+              - key: team
+                value:
+                  stringValue: order
+
+          - body:
+              stringValue: "Successfully retrieved order 67890"
+            attributes:
+              - key: log.file.name
+                value:
+                  stringValue: application.log
+              - key: http.request.method
+                value:
+                  stringValue: POST
+              - key: url.path
+                value:
+                  stringValue: /api/orders/67890
+              - key: http.response.status_code
+                value:
+                  stringValue: "201"
+              - key: request.id
+                value:
+                  stringValue: req-def456
+              - key: team
+                value:
+                  stringValue: order
