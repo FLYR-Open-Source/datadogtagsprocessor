@@ -72,7 +72,7 @@ ddtags: ["k8s.namespace.name:my-namespace", "k8s.pod.name:my-pod"]
 
 and because the `resource` statement uses `merge`, the original `k8s.*` resource attributes are
 left untouched. A span with a `team: checkout` attribute additionally gets `team:checkout` appended
-to its own `ddtags`, and — because that statement uses `move` — the `team` attribute is removed
+to its own `ddtags`, and because that statement uses `move`, the `team` attribute is removed
 from the span afterwards.
 
 ### Notes
