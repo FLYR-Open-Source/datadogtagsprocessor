@@ -3,7 +3,7 @@ package extraction
 import (
 	"strings"
 
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/config"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 )
 

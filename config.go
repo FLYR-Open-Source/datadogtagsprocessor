@@ -5,9 +5,9 @@ import (
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/config"
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/logs"
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/traces"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/logs"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/traces"
 )
 
 type Config struct {

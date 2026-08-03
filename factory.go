@@ -9,9 +9,9 @@ import (
 	"go.opentelemetry.io/collector/processor"
 	"go.opentelemetry.io/collector/processor/processorhelper"
 
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/logs"
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/metadata"
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/traces"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/logs"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/metadata"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/traces"
 )
 
 func NewFactory() processor.Factory {

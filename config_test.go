@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/config"
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/metadata"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/metadata"
 	"github.com/go-jose/go-jose/v4/testutils/require"
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/collector/component"

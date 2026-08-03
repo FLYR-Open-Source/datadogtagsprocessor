@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/config"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 )

@@ -3,7 +3,7 @@ package datadogtagsprocessor
 import (
 	"testing"
 
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/metadata"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/metadata"
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer/consumertest"

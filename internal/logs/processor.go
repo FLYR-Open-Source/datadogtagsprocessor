@@ -1,27 +1,27 @@
-package traces
+package logs
 
 import (
 	"context"
 
 	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/pdata/ptrace"
+	"go.opentelemetry.io/collector/pdata/plog"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/config"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
 )
 
 type Processor struct {
-	contexts []config.ProcessorContext[ptrace.Traces]
+	contexts []config.ProcessorContext[plog.Logs]
 	logger   *zap.Logger
 }
 
 func NewProcessor(contextStatements []config.ContextStatements, settings component.TelemetrySettings) (*Processor, error) {
-	contexts := make([]config.ProcessorContext[ptrace.Traces], len(contextStatements))
+	contexts := make([]config.ProcessorContext[plog.Logs], len(contextStatements))
 
 	for i, cs := range contextStatements {
-		contexts[i] = config.ProcessorContext[ptrace.Traces]{
-			Consumer:          &traceStatements{},
+		contexts[i] = config.ProcessorContext[plog.Logs]{
+			Consumer:          &logStatements{},
 			ContextStatements: cs,
 		}
 	}
@@ -32,15 +32,15 @@ func NewProcessor(contextStatements []config.ContextStatements, settings compone
 	}, nil
 }
 
-func (p *Processor) ConsumeTraces(ctx context.Context, td ptrace.Traces) (ptrace.Traces, error) {
+func (p *Processor) ConsumeLogs(ctx context.Context, ld plog.Logs) (plog.Logs, error) {
 	for _, c := range p.contexts {
-		err := c.Consumer.Consume(ctx, td, c.ContextStatements)
+		err := c.Consumer.Consume(ctx, ld, c.ContextStatements)
 		if err != nil {
-			p.logger.Error("failed processing traces", zap.Error(err))
-			return td, err
+			p.logger.Error("failed processing logs", zap.Error(err))
+			return ld, err
 		}
 	}
-	return td, nil
+	return ld, nil
 }
 
 func (p *Processor) Shutdown(ctx context.Context) error {
@@ -50,7 +50,7 @@ func (p *Processor) Shutdown(ctx context.Context) error {
 		if shutdownable, ok := c.Consumer.(config.Shutdownable); ok {
 			err := shutdownable.Shutdown(ctx)
 			if err != nil {
-				p.logger.Error("failed shutting down traces processor", zap.Error(err))
+				p.logger.Error("failed shutting down log processor", zap.Error(err))
 				errors = multierr.Append(errors, err)
 			}
 		}

@@ -3,7 +3,7 @@ package validator
 import (
 	"fmt"
 
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/config"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
 )
 
 type ParserCollection[T any] struct {

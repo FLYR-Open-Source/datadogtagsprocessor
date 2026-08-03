@@ -5,9 +5,9 @@ import (
 
 	"go.opentelemetry.io/collector/pdata/plog"
 
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/config"
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/extraction"
-	"github.com/FLYR-Open-Source/datadogtagsprocessor/datadogtagsprocessor/internal/validator"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/extraction"
+	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/validator"
 )
 
 type logStatements struct{}
