@@ -1,0 +1,12 @@
+display_name: Datadog DDTags Processor
+type: datadogtags
+
+status:
+  class: processor
+  stability:
+    alpha: [traces, logs]
+  codeowners:
+    active: [vspallas-flyr]
+
+tests:
+  config:
