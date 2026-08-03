@@ -1,5 +1,8 @@
 display_name: Datadog DDTags Processor
+description: Moves or merges resource and span/log attributes into the `ddtags` attribute for Datadog.
 type: datadogtags
+
+github_project: FLYR-Open-Source/datadogtagsprocessor
 
 status:
   class: processor
