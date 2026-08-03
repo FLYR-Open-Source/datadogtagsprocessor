@@ -30,12 +30,12 @@ func createDefaultConfig() component.Config {
 func createTraces(ctx context.Context, set processor.Settings, cfg component.Config, nextConsumer consumer.Traces) (processor.Traces, error) {
 	oCfg, ok := cfg.(*Config)
 	if !ok {
-		return nil, fmt.Errorf("invalid config for \"datadogtags\" processor.")
+		return nil, fmt.Errorf("invalid config for \"datadog_tags\" processor.")
 	}
 
 	p, err := traces.NewProcessor(oCfg.TraceStatements, set.TelemetrySettings)
 	if err != nil {
-		return nil, fmt.Errorf("invalid config for \"transform\" processor %w", err)
+		return nil, fmt.Errorf("invalid config for \"datadog_tags\" processor %w", err)
 	}
 
 	return processorhelper.NewTraces(
@@ -52,12 +52,12 @@ func createTraces(ctx context.Context, set processor.Settings, cfg component.Con
 func createLogs(ctx context.Context, set processor.Settings, cfg component.Config, nextConsumer consumer.Logs) (processor.Logs, error) {
 	oCfg, ok := cfg.(*Config)
 	if !ok {
-		return nil, fmt.Errorf("invalid config for \"datadogtags\" processor.")
+		return nil, fmt.Errorf("invalid config for \"datadog_tags\" processor.")
 	}
 
 	p, err := logs.NewProcessor(oCfg.LogStatements, set.TelemetrySettings)
 	if err != nil {
-		return nil, fmt.Errorf("invalid config for \"transform\" processor %w", err)
+		return nil, fmt.Errorf("invalid config for \"datadog_tags\" processor %w", err)
 	}
 
 	return processorhelper.NewLogs(

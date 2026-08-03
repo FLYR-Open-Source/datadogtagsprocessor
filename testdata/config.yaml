@@ -1,4 +1,4 @@
-datadogtags:
+datadog_tags:
   trace_statements:
     - mode: merge
       context: resource
@@ -20,7 +20,7 @@ datadogtags:
       attributes:
       - team
 
-datadogtags/with_empty_context:
+datadog_tags/with_empty_context:
   trace_statements:
     - mode: merge
       attributes:
@@ -31,7 +31,7 @@ datadogtags/with_empty_context:
       attributes:
       - team
 
-datadogtags/with_empty_attributes:
+datadog_tags/with_empty_attributes:
   trace_statements:
     - mode: merge
       context: resource
