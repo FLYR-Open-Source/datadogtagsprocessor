@@ -81,23 +81,11 @@ func TestBuildAttributeLookup(t *testing.T) {
 	attributes.PutStr("k8s.cluster.uid", "123")
 	attributes.PutStr("k8s.pod.name", "pod")
 
-	root := buildAttributeLookup(attributes, []string{"k8s"})
+	lookup := buildAttributeLookup(attributes, []string{"k8s"})
 
-	k8s := root.children["k8s"]
-	cluster := k8s.children["cluster"]
-	pod := k8s.children["pod"]
-
-	assert.Contains(t, root.children, "k8s")
-	assert.Contains(t, k8s.children, "cluster")
-	assert.Contains(t, k8s.children, "pod")
-
-	assert.Contains(t, cluster.children, "name")
-	assert.Contains(t, cluster.children, "uid")
-	assert.Contains(t, pod.children, "name")
-
-	assert.True(t, cluster.children["name"].isLeaf)
-	assert.True(t, cluster.children["uid"].isLeaf)
-	assert.True(t, pod.children["name"].isLeaf)
+	assert.Equal(t, map[string][]string{
+		"k8s": {"k8s.cluster.name", "k8s.cluster.uid", "k8s.pod.name"},
+	}, lookup)
 }
 
 func TestBuildAttributeLookup_OnlyRequestedNamespaces(t *testing.T) {
@@ -107,11 +95,11 @@ func TestBuildAttributeLookup_OnlyRequestedNamespaces(t *testing.T) {
 	attributes.PutStr("http.method", "GET")
 	attributes.PutStr("team", "payments")
 
-	root := buildAttributeLookup(attributes, []string{"k8s"})
+	lookup := buildAttributeLookup(attributes, []string{"k8s"})
 
-	assert.Contains(t, root.children, "k8s")
-	assert.NotContains(t, root.children, "http")
-	assert.NotContains(t, root.children, "team")
+	assert.Equal(t, map[string][]string{
+		"k8s": {"k8s.cluster.name"},
+	}, lookup)
 }
 
 func TestBuildAttributeLookup_DoesNotMatchNamespacePrefixOfLongerKey(t *testing.T) {
@@ -120,11 +108,24 @@ func TestBuildAttributeLookup_DoesNotMatchNamespacePrefixOfLongerKey(t *testing.
 	attributes.PutStr("k8s.pod.name", "pod")
 	attributes.PutStr("k8s.podname", "other")
 
-	root := buildAttributeLookup(attributes, []string{"k8s.pod"})
+	lookup := buildAttributeLookup(attributes, []string{"k8s.pod"})
 
-	pod := root.children["k8s"].children["pod"]
+	assert.Equal(t, map[string][]string{
+		"k8s.pod": {"k8s.pod.name"},
+	}, lookup)
+}
 
-	assert.ElementsMatch(t, []string{"k8s.pod.name"}, pod.keys)
+func TestBuildAttributeLookup_MatchesKeyEqualToNamespace(t *testing.T) {
+	attributes := pcommon.NewMap()
+
+	attributes.PutStr("k8s", "bare")
+	attributes.PutStr("k8s.pod.name", "pod")
+
+	lookup := buildAttributeLookup(attributes, []string{"k8s"})
+
+	assert.Equal(t, map[string][]string{
+		"k8s": {"k8s", "k8s.pod.name"},
+	}, lookup)
 }
 
 func TestLookupSelectedAttributes(t *testing.T) {
@@ -134,7 +135,10 @@ func TestLookupSelectedAttributes(t *testing.T) {
 	attributes.PutStr("k8s.cluster.uid", "123")
 	attributes.PutStr("k8s.pod.name", "pod")
 
-	root := buildAttributeLookup(attributes, []string{"k8s"})
+	// Build with the same namespaces the queries below use — in production
+	// the lookup is always built from and queried with the wildcards of one
+	// config statement, never a broader namespace.
+	lookup := buildAttributeLookup(attributes, []string{"k8s.cluster", "k8s.service"})
 
 	tests := []struct {
 		name     string
@@ -170,7 +174,7 @@ func TestLookupSelectedAttributes(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			result := lookupSelectedAttributes(root, attributes, test.selected)
+			result := lookupSelectedAttributes(lookup, attributes, test.selected)
 
 			assert.ElementsMatch(t, test.expected, result)
 		})
@@ -271,6 +275,38 @@ func TestExtractAttributeKeys(t *testing.T) {
 
 		assert.Empty(t, keys)
 		assert.Empty(t, values)
+	})
+
+	// Overlapping wildcards group each key under its first matching
+	// namespace, so a key covered by both k8s.* and k8s.pod.* is emitted
+	// once
+	t.Run("overlapping wildcards emit each key once", func(t *testing.T) {
+		attributes := pcommon.NewMap()
+		attributes.PutStr("k8s.pod.name", "pod")
+		attributes.PutStr("k8s.pod.uid", "123")
+		attributes.PutStr("k8s.container.name", "main")
+
+		for _, selected := range [][]string{
+			{"k8s.*", "k8s.pod.*"},
+			{"k8s.pod.*", "k8s.*"},
+		} {
+			cs := config.ContextStatements{
+				Attributes: selected,
+			}
+
+			keys, values := ExtractAttributeKeys(attributes, cs)
+
+			assert.ElementsMatch(
+				t,
+				[]string{"k8s.pod.name", "k8s.pod.uid", "k8s.container.name"},
+				keys,
+			)
+			assert.ElementsMatch(
+				t,
+				[]string{"k8s.pod.name:pod", "k8s.pod.uid:123", "k8s.container.name:main"},
+				values,
+			)
+		}
 	})
 }
 

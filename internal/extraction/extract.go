@@ -30,26 +30,36 @@ func wildcardNamespaces(attributes []string) []string {
 	return namespaces
 }
 
-func buildAttributeLookup(attributes pcommon.Map, namespaces []string) *node {
-	root := newNode()
+// buildAttributeLookup groups the attribute keys that fall under each
+// wildcard namespace, keyed by that namespace. Keys keep the attribute map's
+// insertion order. A key matching several namespaces is grouped under the
+// first match only.
+func buildAttributeLookup(attributes pcommon.Map, namespaces []string) map[string][]string {
+	lookup := make(map[string][]string, len(namespaces))
 
-	for key := range attributes.AsRaw() {
-		for _, namespace := range namespaces {
-			if key == namespace || strings.HasPrefix(key, namespace+".") {
-				root.insert(key)
-				break
-			}
-		}
+	prefixes := make([]string, len(namespaces))
+	for i, namespace := range namespaces {
+		prefixes[i] = namespace + "."
 	}
 
-	return root
+	attributes.Range(func(k string, _ pcommon.Value) bool {
+		for i, namespace := range namespaces {
+			if k == namespace || strings.HasPrefix(k, prefixes[i]) {
+				lookup[namespace] = append(lookup[namespace], k)
+				return true
+			}
+		}
+		return true
+	})
+
+	return lookup
 }
 
-func lookupSelectedAttributes(root *node, attributes pcommon.Map, selected string) []string {
+func lookupSelectedAttributes(lookup map[string][]string, attributes pcommon.Map, selected string) []string {
 	namespace, wildcard := hasWildcardSuffix(selected)
 
 	if wildcard {
-		return root.lookup(namespace)
+		return lookup[namespace]
 	}
 
 	if _, ok := attributes.Get(namespace); ok {
@@ -90,7 +100,7 @@ func addDDTags(attributes Attributes, values []string) {
 }
 
 func ExtractAttributeKeys(attributes pcommon.Map, cs config.ContextStatements) (attributeKeys, ddTagsFormat []string) {
-	var lookup *node
+	var lookup map[string][]string
 	if namespaces := wildcardNamespaces(cs.Attributes); len(namespaces) > 0 {
 		lookup = buildAttributeLookup(attributes, namespaces)
 	}
