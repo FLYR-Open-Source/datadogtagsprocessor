@@ -450,12 +450,44 @@ func TestProcessTraces_Move_WithWildcards(t *testing.T) {
 }
 
 // Log Processing Benchmarks
-func BenchmarkLogs_Merge_WithoutWildcards(b *testing.B) {
+
+// The processor mutates data in place (Move strips the matched attributes,
+// Merge appends to ddtags), so each iteration must consume a fresh copy of
+// the input — reusing one object would make every iteration after the first
+// process already-consumed data. The copy cost is included in each
+// measurement; BenchmarkLogs_Baseline_Copy isolates it so it can be
+// subtracted.
+func benchmarkLogs(b *testing.B, statements []config.ContextStatements) {
 	factory := NewFactory()
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
+	oCfg.LogStatements = statements
 
-	oCfg.LogStatements = []config.ContextStatements{
+	p, err := factory.CreateLogs(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, consumertest.NewNop())
+	require.NoError(b, err)
+
+	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
+	require.NoError(b, err)
+
+	for b.Loop() {
+		cp := plog.NewLogs()
+		input.CopyTo(cp)
+		require.NoError(b, p.ConsumeLogs(b.Context(), cp))
+	}
+}
+
+func BenchmarkLogs_Baseline_Copy(b *testing.B) {
+	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
+	require.NoError(b, err)
+
+	for b.Loop() {
+		cp := plog.NewLogs()
+		input.CopyTo(cp)
+	}
+}
+
+func BenchmarkLogs_Merge_WithoutWildcards(b *testing.B) {
+	benchmarkLogs(b, []config.ContextStatements{
 		{
 			Mode:    config.Merge,
 			Context: "log",
@@ -478,26 +510,11 @@ func BenchmarkLogs_Merge_WithoutWildcards(b *testing.B) {
 				"host.name",
 			},
 		},
-	}
-
-	sink := new(consumertest.LogsSink)
-	p, err := factory.CreateLogs(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
-	require.NoError(b, err)
-
-	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
-	require.NoError(b, err)
-
-	for b.Loop() {
-		require.NoError(b, p.ConsumeLogs(b.Context(), input))
-	}
+	})
 }
 
 func BenchmarkLogs_Merge_WithWildcards(b *testing.B) {
-	factory := NewFactory()
-	cfg := factory.CreateDefaultConfig()
-	oCfg := cfg.(*Config)
-
-	oCfg.LogStatements = []config.ContextStatements{
+	benchmarkLogs(b, []config.ContextStatements{
 		{
 			Mode:    config.Merge,
 			Context: "log",
@@ -515,26 +532,11 @@ func BenchmarkLogs_Merge_WithWildcards(b *testing.B) {
 				"host.name",
 			},
 		},
-	}
-
-	sink := new(consumertest.LogsSink)
-	p, err := factory.CreateLogs(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
-	require.NoError(b, err)
-
-	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
-	require.NoError(b, err)
-
-	for b.Loop() {
-		require.NoError(b, p.ConsumeLogs(b.Context(), input))
-	}
+	})
 }
 
 func BenchmarkLogs_Move_WithoutWildcards(b *testing.B) {
-	factory := NewFactory()
-	cfg := factory.CreateDefaultConfig()
-	oCfg := cfg.(*Config)
-
-	oCfg.LogStatements = []config.ContextStatements{
+	benchmarkLogs(b, []config.ContextStatements{
 		{
 			Mode:    config.Move,
 			Context: "log",
@@ -557,26 +559,11 @@ func BenchmarkLogs_Move_WithoutWildcards(b *testing.B) {
 				"host.name",
 			},
 		},
-	}
-
-	sink := new(consumertest.LogsSink)
-	p, err := factory.CreateLogs(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
-	require.NoError(b, err)
-
-	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
-	require.NoError(b, err)
-
-	for b.Loop() {
-		require.NoError(b, p.ConsumeLogs(b.Context(), input))
-	}
+	})
 }
 
 func BenchmarkLogs_Move_WithWildcards(b *testing.B) {
-	factory := NewFactory()
-	cfg := factory.CreateDefaultConfig()
-	oCfg := cfg.(*Config)
-
-	oCfg.LogStatements = []config.ContextStatements{
+	benchmarkLogs(b, []config.ContextStatements{
 		{
 			Mode:    config.Move,
 			Context: "log",
@@ -594,27 +581,44 @@ func BenchmarkLogs_Move_WithWildcards(b *testing.B) {
 				"host.name",
 			},
 		},
-	}
-
-	sink := new(consumertest.LogsSink)
-	p, err := factory.CreateLogs(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
-	require.NoError(b, err)
-
-	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
-	require.NoError(b, err)
-
-	for b.Loop() {
-		require.NoError(b, p.ConsumeLogs(b.Context(), input))
-	}
+	})
 }
 
 // Trace Processing Benchmarks
-func BenchmarkTraces_Merge_WithoutWildcards(b *testing.B) {
+
+// See benchmarkLogs for why each iteration consumes a fresh copy and how
+// BenchmarkTraces_Baseline_Copy fits in.
+func benchmarkTraces(b *testing.B, statements []config.ContextStatements) {
 	factory := NewFactory()
 	cfg := factory.CreateDefaultConfig()
 	oCfg := cfg.(*Config)
+	oCfg.TraceStatements = statements
 
-	oCfg.TraceStatements = []config.ContextStatements{
+	p, err := factory.CreateTraces(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, consumertest.NewNop())
+	require.NoError(b, err)
+
+	input, err := golden.ReadTraces(filepath.Join("testdata", "traces", "input.yaml"))
+	require.NoError(b, err)
+
+	for b.Loop() {
+		cp := ptrace.NewTraces()
+		input.CopyTo(cp)
+		require.NoError(b, p.ConsumeTraces(b.Context(), cp))
+	}
+}
+
+func BenchmarkTraces_Baseline_Copy(b *testing.B) {
+	input, err := golden.ReadTraces(filepath.Join("testdata", "traces", "input.yaml"))
+	require.NoError(b, err)
+
+	for b.Loop() {
+		cp := ptrace.NewTraces()
+		input.CopyTo(cp)
+	}
+}
+
+func BenchmarkTraces_Merge_WithoutWildcards(b *testing.B) {
+	benchmarkTraces(b, []config.ContextStatements{
 		{
 			Mode:    config.Merge,
 			Context: "span",
@@ -637,26 +641,11 @@ func BenchmarkTraces_Merge_WithoutWildcards(b *testing.B) {
 				"host.name",
 			},
 		},
-	}
-
-	sink := new(consumertest.TracesSink)
-	p, err := factory.CreateTraces(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
-	require.NoError(b, err)
-
-	input, err := golden.ReadTraces(filepath.Join("testdata", "traces", "input.yaml"))
-	require.NoError(b, err)
-
-	for b.Loop() {
-		require.NoError(b, p.ConsumeTraces(b.Context(), input))
-	}
+	})
 }
 
 func BenchmarkTraces_Merge_WithWildcards(b *testing.B) {
-	factory := NewFactory()
-	cfg := factory.CreateDefaultConfig()
-	oCfg := cfg.(*Config)
-
-	oCfg.TraceStatements = []config.ContextStatements{
+	benchmarkTraces(b, []config.ContextStatements{
 		{
 			Mode:    config.Merge,
 			Context: "span",
@@ -674,26 +663,11 @@ func BenchmarkTraces_Merge_WithWildcards(b *testing.B) {
 				"host.name",
 			},
 		},
-	}
-
-	sink := new(consumertest.TracesSink)
-	p, err := factory.CreateTraces(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
-	require.NoError(b, err)
-
-	input, err := golden.ReadTraces(filepath.Join("testdata", "traces", "input.yaml"))
-	require.NoError(b, err)
-
-	for b.Loop() {
-		require.NoError(b, p.ConsumeTraces(b.Context(), input))
-	}
+	})
 }
 
 func BenchmarkTraces_Move_WithoutWildcards(b *testing.B) {
-	factory := NewFactory()
-	cfg := factory.CreateDefaultConfig()
-	oCfg := cfg.(*Config)
-
-	oCfg.TraceStatements = []config.ContextStatements{
+	benchmarkTraces(b, []config.ContextStatements{
 		{
 			Mode:    config.Move,
 			Context: "span",
@@ -716,26 +690,11 @@ func BenchmarkTraces_Move_WithoutWildcards(b *testing.B) {
 				"host.name",
 			},
 		},
-	}
-
-	sink := new(consumertest.TracesSink)
-	p, err := factory.CreateTraces(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
-	require.NoError(b, err)
-
-	input, err := golden.ReadTraces(filepath.Join("testdata", "traces", "input.yaml"))
-	require.NoError(b, err)
-
-	for b.Loop() {
-		require.NoError(b, p.ConsumeTraces(b.Context(), input))
-	}
+	})
 }
 
 func BenchmarkTraces_Move_WithWildcards(b *testing.B) {
-	factory := NewFactory()
-	cfg := factory.CreateDefaultConfig()
-	oCfg := cfg.(*Config)
-
-	oCfg.TraceStatements = []config.ContextStatements{
+	benchmarkTraces(b, []config.ContextStatements{
 		{
 			Mode:    config.Move,
 			Context: "span",
@@ -753,16 +712,5 @@ func BenchmarkTraces_Move_WithWildcards(b *testing.B) {
 				"host.name",
 			},
 		},
-	}
-
-	sink := new(consumertest.TracesSink)
-	p, err := factory.CreateTraces(b.Context(), processortest.NewNopSettings(metadata.Type), oCfg, sink)
-	require.NoError(b, err)
-
-	input, err := golden.ReadTraces(filepath.Join("testdata", "traces", "input.yaml"))
-	require.NoError(b, err)
-
-	for b.Loop() {
-		require.NoError(b, p.ConsumeTraces(b.Context(), input))
-	}
+	})
 }
