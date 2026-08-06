@@ -11,3 +11,11 @@ MDATAGEN_METADATA_YAML?= metadata.yaml
 .PHONY: mdatagen
 mdatagen:
 	@$(MDATAGEN) $(MDATAGEN_METADATA_YAML)
+
+.PHONY: test
+test:
+	go test ./...
+
+.PHONY: bench
+bench:
+	go test -bench=. -benchmem
