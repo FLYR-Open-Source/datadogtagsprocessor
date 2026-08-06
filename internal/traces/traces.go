@@ -25,7 +25,7 @@ func (*traceStatements) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-func (*traceStatements) Consume(ctx context.Context, ptraces ptrace.Traces, cs config.ContextStatements) error {
+func (*traceStatements) Consume(ctx context.Context, ptraces ptrace.Traces, cs config.CompiledStatement) error {
 
 	for i := 0; i < ptraces.ResourceSpans().Len(); i++ {
 		rspans := ptraces.ResourceSpans().At(i)

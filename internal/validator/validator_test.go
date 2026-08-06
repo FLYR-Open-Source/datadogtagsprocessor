@@ -21,7 +21,7 @@ func (*mockConsumer) IsContextValid(context config.ContextID) bool {
 	}
 }
 
-func (l *mockConsumer) Consume(ctx context.Context, ptraces ptrace.Traces, cs config.ContextStatements) error {
+func (l *mockConsumer) Consume(ctx context.Context, ptraces ptrace.Traces, cs config.CompiledStatement) error {
 	return nil
 }
 
@@ -66,6 +66,24 @@ func TestNewParserCollection(t *testing.T) {
 			context:    "resource",
 			attributes: []string{},
 			error:      fmt.Errorf("empty list of attributes for context: %q", "resource"),
+		},
+		{
+			name:       "Empty attribute key",
+			context:    "resource",
+			attributes: []string{"attr1", ""},
+			error:      fmt.Errorf("invalid attribute %q for context %q: missing attribute key", "", "resource"),
+		},
+		{
+			name:       "Bare wildcard",
+			context:    "resource",
+			attributes: []string{".*"},
+			error:      fmt.Errorf("invalid attribute %q for context %q: missing attribute key", ".*", "resource"),
+		},
+		{
+			name:       "Valid wildcard",
+			context:    "resource",
+			attributes: []string{"k8s.*"},
+			error:      nil,
 		},
 	}
 

@@ -25,7 +25,7 @@ func (*logStatements) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-func (*logStatements) Consume(ctx context.Context, plogs plog.Logs, cs config.ContextStatements) error {
+func (*logStatements) Consume(ctx context.Context, plogs plog.Logs, cs config.CompiledStatement) error {
 	for i := 0; i < plogs.ResourceLogs().Len(); i++ {
 		rlogs := plogs.ResourceLogs().At(i)
 		resourceAttributes := rlogs.Resource().Attributes()

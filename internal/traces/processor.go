@@ -22,7 +22,7 @@ func NewProcessor(contextStatements []config.ContextStatements, settings compone
 	for i, cs := range contextStatements {
 		contexts[i] = config.ProcessorContext[ptrace.Traces]{
 			Consumer:          &traceStatements{},
-			ContextStatements: cs,
+			CompiledStatement: cs.Compile(),
 		}
 	}
 
@@ -34,7 +34,7 @@ func NewProcessor(contextStatements []config.ContextStatements, settings compone
 
 func (p *Processor) ConsumeTraces(ctx context.Context, td ptrace.Traces) (ptrace.Traces, error) {
 	for _, c := range p.contexts {
-		err := c.Consumer.Consume(ctx, td, c.ContextStatements)
+		err := c.Consumer.Consume(ctx, td, c.CompiledStatement)
 		if err != nil {
 			p.logger.Error("failed processing traces", zap.Error(err))
 			return td, err

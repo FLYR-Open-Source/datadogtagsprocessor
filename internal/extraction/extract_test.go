@@ -9,69 +9,11 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 )
 
-func TestHasWildcardSuffix(t *testing.T) {
-	tests := []struct {
-		name              string
-		attribute         string
-		expectedNamespace string
-		expectedOK        bool
-	}{
-		{name: "wildcard suffix", attribute: "k8s.*", expectedNamespace: "k8s", expectedOK: true},
-		{
-			name:              "nested namespace wildcard",
-			attribute:         "k8s.cluster.*",
-			expectedNamespace: "k8s.cluster",
-			expectedOK:        true,
-		},
-		{name: "no wildcard suffix", attribute: "k8s.cluster.name", expectedNamespace: "k8s.cluster.name", expectedOK: false},
-		{name: "empty string", attribute: "", expectedNamespace: "", expectedOK: false},
-		{name: "just the wildcard marker", attribute: ".*", expectedNamespace: "", expectedOK: true},
-		{
-			name:              "wildcard not at the end is not stripped",
-			attribute:         "k8s.*.name",
-			expectedNamespace: "k8s.*.name",
-			expectedOK:        false,
-		},
-		{
-			name:              "asterisk without dot prefix is not stripped",
-			attribute:         "k8s*",
-			expectedNamespace: "k8s*",
-			expectedOK:        false,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			namespace, ok := hasWildcardSuffix(test.attribute)
-
-			assert.Equal(t, test.expectedOK, ok)
-			assert.Equal(t, test.expectedNamespace, namespace)
-		})
-	}
-}
-
-func TestWildcardNamespaces(t *testing.T) {
-	tests := []struct {
-		name       string
-		attributes []string
-		expected   []string
-	}{
-		{name: "no attributes", attributes: []string{}, expected: nil},
-		{name: "no wildcard", attributes: []string{"service.name", "team"}, expected: nil},
-		{name: "wildcard present", attributes: []string{"service.name", "k8s.*"}, expected: []string{"k8s"}},
-		{name: "only wildcard", attributes: []string{"k8s.*"}, expected: []string{"k8s"}},
-		{
-			name:       "multiple wildcards",
-			attributes: []string{"k8s.*", "team", "http.*"},
-			expected:   []string{"k8s", "http"},
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, test.expected, wildcardNamespaces(test.attributes))
-		})
-	}
+// compileAttributes builds compiled selections from config syntax
+// (e.g. "k8s.*"). Wildcard parsing itself is covered by the Compile tests in
+// the config package.
+func compileAttributes(attributes ...string) []config.CompiledAttribute {
+	return config.ContextStatements{Attributes: attributes}.Compile().Attributes
 }
 
 func TestBuildAttributeLookup(t *testing.T) {
@@ -81,7 +23,7 @@ func TestBuildAttributeLookup(t *testing.T) {
 	attributes.PutStr("k8s.cluster.uid", "123")
 	attributes.PutStr("k8s.pod.name", "pod")
 
-	lookup := buildAttributeLookup(attributes, []string{"k8s"})
+	lookup := buildAttributeLookup(attributes, compileAttributes("k8s.*"))
 
 	assert.Equal(t, map[string][]string{
 		"k8s": {"k8s.cluster.name", "k8s.cluster.uid", "k8s.pod.name"},
@@ -95,7 +37,7 @@ func TestBuildAttributeLookup_OnlyRequestedNamespaces(t *testing.T) {
 	attributes.PutStr("http.method", "GET")
 	attributes.PutStr("team", "payments")
 
-	lookup := buildAttributeLookup(attributes, []string{"k8s"})
+	lookup := buildAttributeLookup(attributes, compileAttributes("k8s.*"))
 
 	assert.Equal(t, map[string][]string{
 		"k8s": {"k8s.cluster.name"},
@@ -108,7 +50,7 @@ func TestBuildAttributeLookup_DoesNotMatchNamespacePrefixOfLongerKey(t *testing.
 	attributes.PutStr("k8s.pod.name", "pod")
 	attributes.PutStr("k8s.podname", "other")
 
-	lookup := buildAttributeLookup(attributes, []string{"k8s.pod"})
+	lookup := buildAttributeLookup(attributes, compileAttributes("k8s.pod.*"))
 
 	assert.Equal(t, map[string][]string{
 		"k8s.pod": {"k8s.pod.name"},
@@ -121,7 +63,7 @@ func TestBuildAttributeLookup_MatchesKeyEqualToNamespace(t *testing.T) {
 	attributes.PutStr("k8s", "bare")
 	attributes.PutStr("k8s.pod.name", "pod")
 
-	lookup := buildAttributeLookup(attributes, []string{"k8s"})
+	lookup := buildAttributeLookup(attributes, compileAttributes("k8s.*"))
 
 	assert.Equal(t, map[string][]string{
 		"k8s": {"k8s", "k8s.pod.name"},
@@ -135,10 +77,10 @@ func TestLookupSelectedAttributes(t *testing.T) {
 	attributes.PutStr("k8s.cluster.uid", "123")
 	attributes.PutStr("k8s.pod.name", "pod")
 
-	// Build with the same namespaces the queries below use — in production
+	// Build with the same wildcards the queries below use — in production
 	// the lookup is always built from and queried with the wildcards of one
 	// config statement, never a broader namespace.
-	lookup := buildAttributeLookup(attributes, []string{"k8s.cluster", "k8s.service"})
+	lookup := buildAttributeLookup(attributes, compileAttributes("k8s.cluster.*", "k8s.service.*"))
 
 	tests := []struct {
 		name     string
@@ -174,7 +116,7 @@ func TestLookupSelectedAttributes(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			result := lookupSelectedAttributes(lookup, attributes, test.selected)
+			result := lookupSelectedAttributes(lookup, attributes, compileAttributes(test.selected)[0])
 
 			assert.ElementsMatch(t, test.expected, result)
 		})
@@ -233,7 +175,7 @@ func TestExtractAttributeKeys(t *testing.T) {
 			Attributes: []string{"service.name"},
 		}
 
-		keys, values := ExtractAttributeKeys(attributes, cs)
+		keys, values := ExtractAttributeKeys(attributes, cs.Compile())
 
 		assert.ElementsMatch(t, []string{"service.name"}, keys)
 		assert.ElementsMatch(t, []string{"service.name:my-service"}, values)
@@ -253,7 +195,7 @@ func TestExtractAttributeKeys(t *testing.T) {
 			Attributes: []string{"k8s.cluster.*"},
 		}
 
-		keys, values := ExtractAttributeKeys(attributes, cs)
+		keys, values := ExtractAttributeKeys(attributes, cs.Compile())
 
 		assert.ElementsMatch(t, []string{"k8s.cluster.name", "k8s.cluster.uid"}, keys)
 		assert.ElementsMatch(
@@ -271,7 +213,7 @@ func TestExtractAttributeKeys(t *testing.T) {
 			Attributes: []string{"service.missing"},
 		}
 
-		keys, values := ExtractAttributeKeys(attributes, cs)
+		keys, values := ExtractAttributeKeys(attributes, cs.Compile())
 
 		assert.Empty(t, keys)
 		assert.Empty(t, values)
@@ -294,7 +236,7 @@ func TestExtractAttributeKeys(t *testing.T) {
 				Attributes: selected,
 			}
 
-			keys, values := ExtractAttributeKeys(attributes, cs)
+			keys, values := ExtractAttributeKeys(attributes, cs.Compile())
 
 			assert.ElementsMatch(
 				t,
@@ -319,7 +261,7 @@ func TestExtractAttributes_Merge(t *testing.T) {
 		Attributes: []string{"service.name"},
 	}
 
-	_, values := ExtractAttributeKeys(attributes, cs)
+	_, values := ExtractAttributeKeys(attributes, cs.Compile())
 	addDDTags(attributes, values)
 
 	value, ok := attributes.Get("service.name")
@@ -346,7 +288,7 @@ func TestExtractAttributes_Move(t *testing.T) {
 		Attributes: []string{"service.name"},
 	}
 
-	keys, values := ExtractAttributeKeys(attributes, cs)
+	keys, values := ExtractAttributeKeys(attributes, cs.Compile())
 	addDDTags(attributes, values)
 
 	for _, key := range keys {
@@ -380,7 +322,7 @@ func TestExtractAttributes_MergeWildcard(t *testing.T) {
 		Attributes: []string{"k8s.cluster.*"},
 	}
 
-	_, values := ExtractAttributeKeys(attributes, cs)
+	_, values := ExtractAttributeKeys(attributes, cs.Compile())
 	addDDTags(attributes, values)
 
 	ddtags, ok := attributes.Get(ddtagsKey)
@@ -419,7 +361,7 @@ func TestExtractAttributes_MoveWildcard(t *testing.T) {
 		Attributes: []string{"k8s.cluster.*"},
 	}
 
-	keys, values := ExtractAttributeKeys(attributes, cs)
+	keys, values := ExtractAttributeKeys(attributes, cs.Compile())
 	addDDTags(attributes, values)
 
 	for _, key := range keys {
@@ -462,7 +404,7 @@ func TestExtractAttributes_PreservesExistingDDTags(t *testing.T) {
 		Attributes: []string{"service.name"},
 	}
 
-	_, values := ExtractAttributeKeys(attributes, cs)
+	_, values := ExtractAttributeKeys(attributes, cs.Compile())
 	addDDTags(attributes, values)
 
 	result, _ := attributes.Get(ddtagsKey)
@@ -489,7 +431,7 @@ func TestExtractAttributes_DifferentSourceAndDestination(t *testing.T) {
 		Attributes: []string{"k8s.cluster.*"},
 	}
 
-	keys, values := ExtractAttributeKeys(source, cs)
+	keys, values := ExtractAttributeKeys(source, cs.Compile())
 	addDDTags(destination, values)
 
 	for _, key := range keys {
@@ -635,7 +577,7 @@ func TestProcessRecordAttributes(t *testing.T) {
 
 			ProcessRecordAttributes(
 				attributes,
-				tt.cs,
+				tt.cs.Compile(),
 				tt.resourceAttributeTags,
 			)
 

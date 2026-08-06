@@ -30,5 +30,15 @@ func (p *ParserCollection[T]) Validate(cs config.ContextStatements) error {
 		return fmt.Errorf("empty list of attributes for context: %q", cs.Context.String())
 	}
 
+	// A selection compiling to an empty key "" or a bare ".*" can never match a real attribute
+	for i, attribute := range cs.Compile().Attributes {
+		if attribute.Key == "" {
+			return fmt.Errorf(
+				"invalid attribute %q for context %q: missing attribute key",
+				cs.Attributes[i], cs.Context.String(),
+			)
+		}
+	}
+
 	return nil
 }

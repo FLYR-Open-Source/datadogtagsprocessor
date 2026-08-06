@@ -60,7 +60,7 @@ func TestTraceStatements_Consume_ResourceContext(t *testing.T) {
 	}
 
 	stmts := &traceStatements{}
-	err := stmts.Consume(t.Context(), traces, cs)
+	err := stmts.Consume(t.Context(), traces, cs.Compile())
 	assert.NoError(t, err)
 
 	rspans := traces.ResourceSpans().At(0)
@@ -86,7 +86,7 @@ func TestTraceStatements_Consume_SpanContext(t *testing.T) {
 	}
 
 	stmts := &traceStatements{}
-	err := stmts.Consume(t.Context(), traces, cs)
+	err := stmts.Consume(t.Context(), traces, cs.Compile())
 	assert.NoError(t, err)
 
 	sspans := traces.ResourceSpans().At(0).ScopeSpans().At(0)
@@ -121,7 +121,7 @@ func TestTraceStatements_Consume_MultipleResources(t *testing.T) {
 	}
 
 	stmts := &traceStatements{}
-	err := stmts.Consume(t.Context(), traces, cs)
+	err := stmts.Consume(t.Context(), traces, cs.Compile())
 	assert.NoError(t, err)
 
 	ddtagsA, _ := spanA.Attributes().Get("ddtags")
@@ -149,7 +149,7 @@ func TestTraceStatements_Consume_Move(t *testing.T) {
 	}
 
 	stmts := &traceStatements{}
-	err := stmts.Consume(t.Context(), traces, cs)
+	err := stmts.Consume(t.Context(), traces, cs.Compile())
 	assert.NoError(t, err)
 
 	_, ok := span.Attributes().Get("team")
@@ -184,7 +184,7 @@ func TestTraceStatements_Consume_ResourceContext_Move(t *testing.T) {
 	}
 
 	stmts := &traceStatements{}
-	err := stmts.Consume(t.Context(), traces, cs)
+	err := stmts.Consume(t.Context(), traces, cs.Compile())
 	assert.NoError(t, err)
 
 	_, ok := rspans.Resource().Attributes().Get("k8s.cluster.name")
@@ -212,7 +212,7 @@ func TestTraceStatements_Consume_NoResourceSpans(t *testing.T) {
 	}
 
 	stmts := &traceStatements{}
-	err := stmts.Consume(t.Context(), traces, cs)
+	err := stmts.Consume(t.Context(), traces, cs.Compile())
 	assert.NoError(t, err)
 }
 

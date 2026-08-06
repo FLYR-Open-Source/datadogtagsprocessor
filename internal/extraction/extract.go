@@ -14,38 +14,21 @@ const (
 type ResourceAttributes = pcommon.Map
 type Attributes = pcommon.Map
 
-func hasWildcardSuffix(attribute string) (string, bool) {
-	return strings.CutSuffix(attribute, ".*")
-}
-
-func wildcardNamespaces(attributes []string) []string {
-	var namespaces []string
-
-	for _, attr := range attributes {
-		if namespace, ok := hasWildcardSuffix(attr); ok {
-			namespaces = append(namespaces, namespace)
-		}
-	}
-
-	return namespaces
-}
-
 // buildAttributeLookup groups the attribute keys that fall under each
-// wildcard namespace, keyed by that namespace. Keys keep the attribute map's
-// insertion order. A key matching several namespaces is grouped under the
-// first match only.
-func buildAttributeLookup(attributes pcommon.Map, namespaces []string) map[string][]string {
-	lookup := make(map[string][]string, len(namespaces))
-
-	prefixes := make([]string, len(namespaces))
-	for i, namespace := range namespaces {
-		prefixes[i] = namespace + "."
-	}
+// wildcard selection's namespace, keyed by that namespace. Keys keep the
+// attribute map's insertion order. A key matching several namespaces is
+// grouped under the first match only.
+func buildAttributeLookup(attributes pcommon.Map, selections []config.CompiledAttribute) map[string][]string {
+	lookup := make(map[string][]string, len(selections))
 
 	attributes.Range(func(k string, _ pcommon.Value) bool {
-		for i, namespace := range namespaces {
-			if k == namespace || strings.HasPrefix(k, prefixes[i]) {
-				lookup[namespace] = append(lookup[namespace], k)
+		for _, selected := range selections {
+			if !selected.Wildcard {
+				continue
+			}
+
+			if k == selected.Key || strings.HasPrefix(k, selected.Prefix) {
+				lookup[selected.Key] = append(lookup[selected.Key], k)
 				return true
 			}
 		}
@@ -55,15 +38,13 @@ func buildAttributeLookup(attributes pcommon.Map, namespaces []string) map[strin
 	return lookup
 }
 
-func lookupSelectedAttributes(lookup map[string][]string, attributes pcommon.Map, selected string) []string {
-	namespace, wildcard := hasWildcardSuffix(selected)
-
-	if wildcard {
-		return lookup[namespace]
+func lookupSelectedAttributes(lookup map[string][]string, attributes pcommon.Map, selected config.CompiledAttribute) []string {
+	if selected.Wildcard {
+		return lookup[selected.Key]
 	}
 
-	if _, ok := attributes.Get(namespace); ok {
-		return []string{namespace}
+	if _, ok := attributes.Get(selected.Key); ok {
+		return []string{selected.Key}
 	}
 
 	return nil
@@ -99,10 +80,10 @@ func addDDTags(attributes Attributes, values []string) {
 	}
 }
 
-func ExtractAttributeKeys(attributes pcommon.Map, cs config.ContextStatements) (attributeKeys, ddTagsFormat []string) {
+func ExtractAttributeKeys(attributes pcommon.Map, cs config.CompiledStatement) (attributeKeys, ddTagsFormat []string) {
 	var lookup map[string][]string
-	if namespaces := wildcardNamespaces(cs.Attributes); len(namespaces) > 0 {
-		lookup = buildAttributeLookup(attributes, namespaces)
+	if cs.HasWildcards {
+		lookup = buildAttributeLookup(attributes, cs.Attributes)
 	}
 
 	for _, selectedAttribute := range cs.Attributes {
@@ -116,7 +97,7 @@ func ExtractAttributeKeys(attributes pcommon.Map, cs config.ContextStatements) (
 
 func ProcessRecordAttributes(
 	attributes pcommon.Map,
-	cs config.ContextStatements,
+	cs config.CompiledStatement,
 	resourceAttributeKeyValues []string,
 ) {
 	if cs.Context == config.Resource {

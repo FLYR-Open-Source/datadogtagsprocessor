@@ -22,7 +22,7 @@ func NewProcessor(contextStatements []config.ContextStatements, settings compone
 	for i, cs := range contextStatements {
 		contexts[i] = config.ProcessorContext[plog.Logs]{
 			Consumer:          &logStatements{},
-			ContextStatements: cs,
+			CompiledStatement: cs.Compile(),
 		}
 	}
 
@@ -34,7 +34,7 @@ func NewProcessor(contextStatements []config.ContextStatements, settings compone
 
 func (p *Processor) ConsumeLogs(ctx context.Context, ld plog.Logs) (plog.Logs, error) {
 	for _, c := range p.contexts {
-		err := c.Consumer.Consume(ctx, ld, c.ContextStatements)
+		err := c.Consumer.Consume(ctx, ld, c.CompiledStatement)
 		if err != nil {
 			p.logger.Error("failed processing logs", zap.Error(err))
 			return ld, err

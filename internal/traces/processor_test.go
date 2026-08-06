@@ -20,7 +20,7 @@ type mockConsumer struct {
 
 func (*mockConsumer) IsContextValid(config.ContextID) bool { return true }
 
-func (m *mockConsumer) Consume(context.Context, ptrace.Traces, config.ContextStatements) error {
+func (m *mockConsumer) Consume(context.Context, ptrace.Traces, config.CompiledStatement) error {
 	return m.consumeErr
 }
 
@@ -86,7 +86,7 @@ func TestProcessor_ConsumeTraces(t *testing.T) {
 	t.Run("stops and returns error on first failing consumer", func(t *testing.T) {
 		p := &Processor{
 			contexts: []config.ProcessorContext[ptrace.Traces]{
-				{Consumer: &mockConsumer{consumeErr: errors.New("boom")}, ContextStatements: config.ContextStatements{}},
+				{Consumer: &mockConsumer{consumeErr: errors.New("boom")}, CompiledStatement: config.CompiledStatement{}},
 			},
 			logger: newTelemetrySettings().Logger,
 		}

@@ -59,9 +59,55 @@ type ContextStatements struct {
 	Attributes []string  `mapstructure:"attributes"`
 }
 
+// CompiledAttribute is one entry of ContextStatements.Attributes with its
+// wildcard syntax parsed. For a wildcard selection ("k8s.*"), Key holds the
+// namespace ("k8s") and Prefix the ready-made match prefix ("k8s."); for an
+// exact selection, Key holds the attribute key as written.
+type CompiledAttribute struct {
+	Key      string
+	Prefix   string
+	Wildcard bool
+}
+
+type CompiledStatement struct {
+	Mode         Mode
+	Context      ContextID
+	Attributes   []CompiledAttribute
+	HasWildcards bool
+}
+
+const wildcardSuffix = ".*"
+
+// Compile parses the statement's attribute selections once so the per-record
+// hot path never re-derives wildcard namespaces or prefixes. Attribute order
+// is preserved, so tags are emitted in the order the config lists them.
+func (cs ContextStatements) Compile() CompiledStatement {
+	compiled := CompiledStatement{
+		Mode:       cs.Mode,
+		Context:    cs.Context,
+		Attributes: make([]CompiledAttribute, len(cs.Attributes)),
+	}
+
+	for i, attribute := range cs.Attributes {
+		if namespace, ok := strings.CutSuffix(attribute, wildcardSuffix); ok {
+			compiled.Attributes[i] = CompiledAttribute{
+				Key:      namespace,
+				Prefix:   namespace + ".",
+				Wildcard: true,
+			}
+			compiled.HasWildcards = true
+			continue
+		}
+
+		compiled.Attributes[i] = CompiledAttribute{Key: attribute}
+	}
+
+	return compiled
+}
+
 type Consumer[T any] interface {
 	IsContextValid(ContextID) bool
-	Consume(context.Context, T, ContextStatements) error
+	Consume(context.Context, T, CompiledStatement) error
 }
 
 type Shutdownable interface {
@@ -70,5 +116,5 @@ type Shutdownable interface {
 
 type ProcessorContext[T any] struct {
 	Consumer          Consumer[T]
-	ContextStatements ContextStatements
+	CompiledStatement CompiledStatement
 }
