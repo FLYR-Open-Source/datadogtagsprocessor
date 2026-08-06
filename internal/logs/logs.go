@@ -50,11 +50,8 @@ func (*logStatements) Consume(ctx context.Context, plogs plog.Logs, cs config.Co
 			}
 		}
 
-		if cs.Mode == config.Move &&
-			cs.Context == config.Resource {
-			for _, key := range resourceAttributeKeys {
-				resourceAttributes.Remove(key)
-			}
+		if cs.Mode == config.Move && cs.Context == config.Resource {
+			extraction.RemoveAttributes(resourceAttributes, resourceAttributeKeys)
 		}
 	}
 

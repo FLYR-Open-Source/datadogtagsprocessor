@@ -51,11 +51,8 @@ func (*traceStatements) Consume(ctx context.Context, ptraces ptrace.Traces, cs c
 			}
 		}
 
-		if cs.Mode == config.Move &&
-			cs.Context == config.Resource {
-			for _, key := range resourceAttributeKeys {
-				resourceAttributes.Remove(key)
-			}
+		if cs.Mode == config.Move && cs.Context == config.Resource {
+			extraction.RemoveAttributes(resourceAttributes, resourceAttributeKeys)
 		}
 	}
 

@@ -1,6 +1,7 @@
 package extraction
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
@@ -95,6 +96,18 @@ func ExtractAttributeKeys(attributes pcommon.Map, cs config.CompiledStatement) (
 	return attributeKeys, ddTagsFormat
 }
 
+// RemoveAttributes deletes the given keys in a single pass over the map,
+// unlike per-key Remove calls which each rescan it.
+func RemoveAttributes(attributes pcommon.Map, keys []string) {
+	if len(keys) == 0 {
+		return
+	}
+
+	attributes.RemoveIf(func(key string, _ pcommon.Value) bool {
+		return slices.Contains(keys, key)
+	})
+}
+
 func ProcessRecordAttributes(
 	attributes pcommon.Map,
 	cs config.CompiledStatement,
@@ -114,8 +127,6 @@ func ProcessRecordAttributes(
 	}
 
 	if cs.Mode == config.Move {
-		for _, key := range attributeKeys {
-			attributes.Remove(key)
-		}
+		RemoveAttributes(attributes, attributeKeys)
 	}
 }

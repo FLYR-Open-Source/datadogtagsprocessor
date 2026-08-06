@@ -123,6 +123,26 @@ func TestLookupSelectedAttributes(t *testing.T) {
 	}
 }
 
+func TestRemoveAttributes(t *testing.T) {
+	attributes := pcommon.NewMap()
+	attributes.PutStr("k8s.pod.name", "pod")
+	attributes.PutStr("k8s.namespace.name", "ns")
+	attributes.PutStr("team", "payments")
+
+	RemoveAttributes(attributes, []string{"k8s.pod.name", "team", "not.present"})
+
+	assert.Equal(t, map[string]any{"k8s.namespace.name": "ns"}, attributes.AsRaw())
+}
+
+func TestRemoveAttributes_NoKeysIsNoop(t *testing.T) {
+	attributes := pcommon.NewMap()
+	attributes.PutStr("team", "payments")
+
+	RemoveAttributes(attributes, nil)
+
+	assert.Equal(t, map[string]any{"team": "payments"}, attributes.AsRaw())
+}
+
 func TestGetDDTags(t *testing.T) {
 	t.Run("should create ddtags when it does not exist", func(t *testing.T) {
 		attributes := pcommon.NewMap()
