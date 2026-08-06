@@ -7,44 +7,40 @@ resourceSpans:
         - key: k8s.cluster.uid
           value:
             stringValue: 12345678-abcd-4ef0-9012-123456789abc
+        - key: cloud.platform
+          value:
+            stringValue: gcp_kubernetes_engine
+        - key: service.namespace
+          value:
+            stringValue: my-namespace
         - key: k8s.deployment.uid
           value:
             stringValue: a3082e7c-89ab-4690-ab1a-19b42aa7c359
+        - key: cloud.availability_zone
+          value:
+            stringValue: europe-west4-a
         - key: k8s.node.name
           value:
             stringValue: gke-cluster-a-default-pool-abc123
+        - key: cloud.region
+          value:
+            stringValue: europe-west4
         - key: k8s.pod.uid
           value:
             stringValue: 12345678-90ab-cdef-1234-567890abcdef
+        - key: cloud.provider
+          value:
+            stringValue: gcp
         - key: k8s.replicaset.uid
           value:
             stringValue: 50f88e0d-0bf7-4087-b2f2-357cbbce9459
         - key: service.instance.id
           value:
             stringValue: my-namespace.my-service-59ddb85bd5-xyz12.main
-        - key: service.namespace
-          value:
-            stringValue: my-namespace
-        - key: cloud.provider
-          value:
-            stringValue: gcp
-        - key: cloud.platform
-          value:
-            stringValue: gcp_kubernetes_engine
-        - key: cloud.region
-          value:
-            stringValue: europe-west4
-        - key: cloud.availability_zone
-          value:
-            stringValue: europe-west4-a
-
     scopeSpans:
-      - spans:
-          - name: GET /api/orders/12345
-            kind: SPAN_KIND_SERVER
-            traceId: 5b8aa5a2d2c872e8321cf37308d69df2
-            spanId: 051581bf3f2f4e9a
-            attributes:
+      - scope: {}
+        spans:
+          - attributes:
               - key: http.request.method
                 value:
                   stringValue: GET
@@ -62,21 +58,21 @@ resourceSpans:
                   arrayValue:
                     values:
                       - stringValue: team:order
-                      - stringValue: deployment.environment.name:prd
-                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
-                      - stringValue: k8s.container.name:main
                       - stringValue: k8s.deployment.name:my-deployment
                       - stringValue: k8s.namespace.name:my-namespace
                       - stringValue: k8s.pod.name:my-deployment-59ddb85bd5-xyz12
+                      - stringValue: k8s.container.name:main
                       - stringValue: k8s.replicaset.name:my-deployment-59ddb85bd5
                       - stringValue: service.name:my-service
                       - stringValue: service.version:1.2.3
-
-          - name: POST /api/orders/67890
-            kind: SPAN_KIND_SERVER
-            traceId: 7b8aa5a2d2c872e8321cf37308d69df3
-            spanId: 161581bf3f2f4e9b
-            attributes:
+                      - stringValue: deployment.environment.name:prd
+                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
+            kind: 2
+            name: GET /api/orders/12345
+            spanId: 051581bf3f2f4e9a
+            status: {}
+            traceId: 5b8aa5a2d2c872e8321cf37308d69df2
+          - attributes:
               - key: http.request.method
                 value:
                   stringValue: POST
@@ -94,12 +90,17 @@ resourceSpans:
                   arrayValue:
                     values:
                       - stringValue: team:order
-                      - stringValue: deployment.environment.name:prd
-                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
-                      - stringValue: k8s.container.name:main
                       - stringValue: k8s.deployment.name:my-deployment
                       - stringValue: k8s.namespace.name:my-namespace
                       - stringValue: k8s.pod.name:my-deployment-59ddb85bd5-xyz12
+                      - stringValue: k8s.container.name:main
                       - stringValue: k8s.replicaset.name:my-deployment-59ddb85bd5
                       - stringValue: service.name:my-service
                       - stringValue: service.version:1.2.3
+                      - stringValue: deployment.environment.name:prd
+                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
+            kind: 2
+            name: POST /api/orders/67890
+            spanId: 161581bf3f2f4e9b
+            status: {}
+            traceId: 7b8aa5a2d2c872e8321cf37308d69df3

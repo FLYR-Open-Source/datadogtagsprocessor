@@ -34,15 +34,15 @@ resourceLogs:
         - key: k8s.replicaset.uid
           value:
             stringValue: 50f88e0d-0bf7-4087-b2f2-357cbbce9459
-        - key: service.instance.id
-          value:
-            stringValue: my-namespace.my-service-59ddb85bd5-xyz12.main
         - key: service.name
           value:
             stringValue: my-service
         - key: service.namespace
           value:
             stringValue: my-namespace
+        - key: service.instance.id
+          value:
+            stringValue: my-namespace.my-service-59ddb85bd5-xyz12.main
         - key: service.version
           value:
             stringValue: 1.2.3
@@ -64,37 +64,32 @@ resourceLogs:
         - key: host.name
           value:
             stringValue: gke-cluster-a-default-pool-abc123
-
     scopeLogs:
       - logRecords:
-          - body:
-              stringValue: "Successfully retrieved order 12345"
-            attributes:
-              - key: team
-                value:
-                  stringValue: order
+          - attributes:
               - key: log.file.name
                 value:
                   stringValue: application.log
               - key: http.request.method
                 value:
                   stringValue: GET
-              - key: http.response.status_code
-                value:
-                  stringValue: "200"
               - key: url.path
                 value:
                   stringValue: /api/orders/12345
+              - key: http.response.status_code
+                value:
+                  stringValue: "200"
               - key: request.id
                 value:
                   stringValue: req-abc123
+              - key: team
+                value:
+                  stringValue: order
               - key: ddtags
                 value:
                   arrayValue:
                     values:
                       - stringValue: team:order
-                      - stringValue: deployment.environment.name:prd
-                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
                       - stringValue: k8s.cluster.name:cluster-a
                       - stringValue: k8s.cluster.uid:12345678-abcd-4ef0-9012-123456789abc
                       - stringValue: k8s.container.name:main
@@ -106,39 +101,38 @@ resourceLogs:
                       - stringValue: k8s.pod.uid:12345678-90ab-cdef-1234-567890abcdef
                       - stringValue: k8s.replicaset.name:my-deployment-59ddb85bd5
                       - stringValue: k8s.replicaset.uid:50f88e0d-0bf7-4087-b2f2-357cbbce9459
-                      - stringValue: service.instance.id:my-namespace.my-service-59ddb85bd5-xyz12.main
                       - stringValue: service.name:my-service
                       - stringValue: service.namespace:my-namespace
+                      - stringValue: service.instance.id:my-namespace.my-service-59ddb85bd5-xyz12.main
                       - stringValue: service.version:1.2.3
-
-          - body:
-              stringValue: "Successfully retrieved order 67890"
-            attributes:
-              - key: team
-                value:
-                  stringValue: order
+                      - stringValue: deployment.environment.name:prd
+                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
+            body:
+              stringValue: Successfully retrieved order 12345
+          - attributes:
               - key: log.file.name
                 value:
                   stringValue: application.log
               - key: http.request.method
                 value:
                   stringValue: POST
-              - key: http.response.status_code
-                value:
-                  stringValue: "201"
               - key: url.path
                 value:
                   stringValue: /api/orders/67890
+              - key: http.response.status_code
+                value:
+                  stringValue: "201"
               - key: request.id
                 value:
                   stringValue: req-def456
+              - key: team
+                value:
+                  stringValue: order
               - key: ddtags
                 value:
                   arrayValue:
                     values:
                       - stringValue: team:order
-                      - stringValue: deployment.environment.name:prd
-                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
                       - stringValue: k8s.cluster.name:cluster-a
                       - stringValue: k8s.cluster.uid:12345678-abcd-4ef0-9012-123456789abc
                       - stringValue: k8s.container.name:main
@@ -150,7 +144,12 @@ resourceLogs:
                       - stringValue: k8s.pod.uid:12345678-90ab-cdef-1234-567890abcdef
                       - stringValue: k8s.replicaset.name:my-deployment-59ddb85bd5
                       - stringValue: k8s.replicaset.uid:50f88e0d-0bf7-4087-b2f2-357cbbce9459
-                      - stringValue: service.instance.id:my-namespace.my-service-59ddb85bd5-xyz12.main
                       - stringValue: service.name:my-service
                       - stringValue: service.namespace:my-namespace
+                      - stringValue: service.instance.id:my-namespace.my-service-59ddb85bd5-xyz12.main
                       - stringValue: service.version:1.2.3
+                      - stringValue: deployment.environment.name:prd
+                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
+            body:
+              stringValue: Successfully retrieved order 67890
+        scope: {}
