@@ -63,18 +63,6 @@ processors:
           - team
 ```
 
-Given the config above, on a resource carrying `k8s.namespace.name: my-namespace` and
-`k8s.pod.name: my-pod`, every span under that resource gets:
-
-```yaml
-ddtags: ["k8s.namespace.name:my-namespace", "k8s.pod.name:my-pod"]
-```
-
-and because the `resource` statement uses `merge`, the original `k8s.*` resource attributes are
-left untouched. A span with a `team: checkout` attribute additionally gets `team:checkout` appended
-to its own `ddtags`, and because that statement uses `move`, the `team` attribute is removed
-from the span afterwards.
-
 ### Notes
 
 - `context` is required on every statement; there is no default.
@@ -85,3 +73,97 @@ from the span afterwards.
 - Wildcards (`namespace.*`) match the namespace itself and any dotted attribute key under it (e.g.
   `k8s.*` matches `k8s.pod.name`, `k8s.namespace.name`, etc.), based on exact prefix segments, not
   substring matching.
+
+## Examples
+
+Both examples below process the same input, a log record under a resource:
+
+```yaml
+# resource attributes
+k8s.namespace.name: my-namespace
+k8s.pod.name: my-pod
+service.name: my-service
+cloud.provider: gcp
+
+# log record attributes
+team: checkout
+request.id: req-abc123
+```
+
+The tags end up the same in both modes. The only difference is what happens to the
+source attributes afterwards.
+
+### Merge
+
+`merge` copies the selected attributes into `ddtags` and leaves them in place.
+
+```yaml
+processors:
+  datadog_tags:
+    log_statements:
+      - mode: merge
+        context: resource
+        attributes:
+          - k8s.*
+          - service.name
+      - mode: merge
+        context: log
+        attributes:
+          - team
+```
+
+After processing:
+
+```yaml
+# resource attributes (unchanged)
+k8s.namespace.name: my-namespace
+k8s.pod.name: my-pod
+service.name: my-service
+cloud.provider: gcp
+
+# log record attributes
+team: checkout
+request.id: req-abc123
+ddtags:
+  - k8s.namespace.name:my-namespace
+  - k8s.pod.name:my-pod
+  - service.name:my-service
+  - team:checkout
+```
+
+### Move
+
+`move` copies the selected attributes into `ddtags` and then removes them from the source.
+
+```yaml
+processors:
+  datadog_tags:
+    log_statements:
+      - mode: move
+        context: resource
+        attributes:
+          - k8s.*
+          - service.name
+      - mode: move
+        context: log
+        attributes:
+          - team
+```
+
+After processing:
+
+```yaml
+# resource attributes (selected ones removed)
+cloud.provider: gcp
+
+# log record attributes ("team" removed)
+request.id: req-abc123
+ddtags:
+  - k8s.namespace.name:my-namespace
+  - k8s.pod.name:my-pod
+  - service.name:my-service
+  - team:checkout
+```
+
+`cloud.provider` and `request.id` stay in both modes because no statement selects them,
+and they never appear in `ddtags`.
