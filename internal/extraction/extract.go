@@ -61,7 +61,7 @@ func getDDTags(attributes pcommon.Map) pcommon.Slice {
 }
 
 func getTagsFormatted(attributes pcommon.Map, keys []string) []string {
-	var values []string
+	values := make([]string, 0, len(keys))
 
 	for _, key := range keys {
 		value, ok := attributes.Get(key)
@@ -75,6 +75,7 @@ func getTagsFormatted(attributes pcommon.Map, keys []string) []string {
 
 func addDDTags(attributes Attributes, values []string) {
 	ddtags := getDDTags(attributes)
+	ddtags.EnsureCapacity(ddtags.Len() + len(values))
 
 	for _, value := range values {
 		ddtags.AppendEmpty().SetStr(value)
@@ -86,6 +87,9 @@ func ExtractAttributeKeys(attributes pcommon.Map, cs config.CompiledStatement) (
 	if cs.HasWildcards {
 		lookup = buildAttributeLookup(attributes, cs.Attributes)
 	}
+
+	// At least one key per selection; wildcards may add more.
+	attributeKeys = make([]string, 0, len(cs.Attributes))
 
 	for _, selectedAttribute := range cs.Attributes {
 		keys := lookupSelectedAttributes(lookup, attributes, selectedAttribute)
