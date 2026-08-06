@@ -39,18 +39,6 @@ func buildAttributeLookup(attributes pcommon.Map, selections []config.CompiledAt
 	return lookup
 }
 
-func lookupSelectedAttributes(lookup map[string][]string, attributes pcommon.Map, selected config.CompiledAttribute) []string {
-	if selected.Wildcard {
-		return lookup[selected.Key]
-	}
-
-	if _, ok := attributes.Get(selected.Key); ok {
-		return []string{selected.Key}
-	}
-
-	return nil
-}
-
 func getDDTags(attributes pcommon.Map) pcommon.Slice {
 	value, ok := attributes.Get(ddtagsKey)
 	if ok {
@@ -91,9 +79,15 @@ func ExtractAttributeKeys(attributes pcommon.Map, cs config.CompiledStatement) (
 	// At least one key per selection; wildcards may add more.
 	attributeKeys = make([]string, 0, len(cs.Attributes))
 
-	for _, selectedAttribute := range cs.Attributes {
-		keys := lookupSelectedAttributes(lookup, attributes, selectedAttribute)
-		attributeKeys = append(attributeKeys, keys...)
+	for _, selected := range cs.Attributes {
+		if selected.Wildcard {
+			attributeKeys = append(attributeKeys, lookup[selected.Key]...)
+			continue
+		}
+
+		if _, ok := attributes.Get(selected.Key); ok {
+			attributeKeys = append(attributeKeys, selected.Key)
+		}
 	}
 
 	ddTagsFormat = getTagsFormatted(attributes, attributeKeys)

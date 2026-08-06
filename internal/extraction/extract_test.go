@@ -70,59 +70,6 @@ func TestBuildAttributeLookup_MatchesKeyEqualToNamespace(t *testing.T) {
 	}, lookup)
 }
 
-func TestLookupSelectedAttributes(t *testing.T) {
-	attributes := pcommon.NewMap()
-
-	attributes.PutStr("k8s.cluster.name", "cluster")
-	attributes.PutStr("k8s.cluster.uid", "123")
-	attributes.PutStr("k8s.pod.name", "pod")
-
-	// Build with the same wildcards the queries below use — in production
-	// the lookup is always built from and queried with the wildcards of one
-	// config statement, never a broader namespace.
-	lookup := buildAttributeLookup(attributes, compileAttributes("k8s.cluster.*", "k8s.service.*"))
-
-	tests := []struct {
-		name     string
-		selected string
-		expected []string
-	}{
-		{
-			name:     "wildcard namespace",
-			selected: "k8s.cluster.*",
-			expected: []string{
-				"k8s.cluster.name",
-				"k8s.cluster.uid",
-			},
-		},
-		{
-			name:     "exact attribute",
-			selected: "k8s.pod.name",
-			expected: []string{
-				"k8s.pod.name",
-			},
-		},
-		{
-			name:     "non-existing attribute",
-			selected: "k8s.service.name",
-			expected: nil,
-		},
-		{
-			name:     "non-existing namespace",
-			selected: "k8s.service.*",
-			expected: nil,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			result := lookupSelectedAttributes(lookup, attributes, compileAttributes(test.selected)[0])
-
-			assert.ElementsMatch(t, test.expected, result)
-		})
-	}
-}
-
 func TestRemoveAttributes(t *testing.T) {
 	attributes := pcommon.NewMap()
 	attributes.PutStr("k8s.pod.name", "pod")
@@ -231,6 +178,20 @@ func TestExtractAttributeKeys(t *testing.T) {
 
 		cs := config.ContextStatements{
 			Attributes: []string{"service.missing"},
+		}
+
+		keys, values := ExtractAttributeKeys(attributes, cs.Compile())
+
+		assert.Empty(t, keys)
+		assert.Empty(t, values)
+	})
+
+	t.Run("wildcard matching nothing yields no keys or values", func(t *testing.T) {
+		attributes := pcommon.NewMap()
+		attributes.PutStr("service.name", "my-service")
+
+		cs := config.ContextStatements{
+			Attributes: []string{"k8s.*"},
 		}
 
 		keys, values := ExtractAttributeKeys(attributes, cs.Compile())
