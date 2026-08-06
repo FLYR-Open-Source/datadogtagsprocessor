@@ -11,11 +11,18 @@ import (
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
 )
 
+// Processor applies the configured trace statements to incoming batches.
 type Processor struct {
+	// contexts holds one entry per configured statement, in config order.
 	contexts []config.ProcessorContext[ptrace.Traces]
-	logger   *zap.Logger
+	// logger reports processing failures.
+	logger *zap.Logger
 }
 
+// NewProcessor compiles the configured statements and builds a processor.
+//
+// Compilation happens once here so the hot path never parses the
+// configuration again.
 func NewProcessor(contextStatements []config.ContextStatements, settings component.TelemetrySettings) (*Processor, error) {
 	contexts := make([]config.ProcessorContext[ptrace.Traces], len(contextStatements))
 
@@ -32,6 +39,10 @@ func NewProcessor(contextStatements []config.ContextStatements, settings compone
 	}, nil
 }
 
+// ConsumeTraces runs every configured statement against the batch.
+//
+// Statements run in config order. The first failure stops processing and
+// is returned.
 func (p *Processor) ConsumeTraces(ctx context.Context, td ptrace.Traces) (ptrace.Traces, error) {
 	for _, c := range p.contexts {
 		err := c.Consumer.Consume(ctx, td, c.CompiledStatement)
@@ -43,6 +54,10 @@ func (p *Processor) ConsumeTraces(ctx context.Context, td ptrace.Traces) (ptrace
 	return td, nil
 }
 
+// Shutdown shuts down every consumer that needs cleanup.
+//
+// All consumers are shut down and the errors are collected, so one failure
+// does not stop the rest.
 func (p *Processor) Shutdown(ctx context.Context) error {
 	var errors error
 

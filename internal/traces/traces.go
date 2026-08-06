@@ -10,8 +10,12 @@ import (
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/validator"
 )
 
+// traceStatements applies compiled statements to trace batches.
 type traceStatements struct{}
 
+// IsContextValid reports whether the context is supported for traces.
+//
+// Only the resource and span contexts are valid.
 func (*traceStatements) IsContextValid(context config.ContextID) bool {
 	switch context {
 	case config.Resource, config.Span:
@@ -21,10 +25,18 @@ func (*traceStatements) IsContextValid(context config.ContextID) bool {
 	}
 }
 
+// Shutdown implements config.Shutdownable.
+//
+// There is nothing to clean up for traces.
 func (*traceStatements) Shutdown(ctx context.Context) error {
 	return nil
 }
 
+// Consume applies a statement to every span in the batch.
+//
+// For resource statements the tags are extracted once per resource and
+// appended to every span. In move mode the matched resource attributes
+// are removed after all spans are processed.
 func (*traceStatements) Consume(ctx context.Context, ptraces ptrace.Traces, cs config.CompiledStatement) error {
 
 	for i := 0; i < ptraces.ResourceSpans().Len(); i++ {
@@ -59,6 +71,8 @@ func (*traceStatements) Consume(ctx context.Context, ptraces ptrace.Traces, cs c
 	return nil
 }
 
+// NewTraceParserCollection returns a parser collection that validates trace
+// statements.
 func NewTraceParserCollection() *validator.ParserCollection[ptrace.Traces] {
 	return validator.NewParserCollection(&traceStatements{})
 }

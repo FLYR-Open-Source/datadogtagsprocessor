@@ -9,14 +9,20 @@ import (
 )
 
 const (
+	// ddtagsKey is the attribute that holds the Datadog tags.
 	ddtagsKey = "ddtags"
 )
 
+// ResourceAttributes is the attribute map of a resource.
 type ResourceAttributes = pcommon.Map
+
+// Attributes is the attribute map of a single record.
 type Attributes = pcommon.Map
 
 // buildAttributeLookup groups the attribute keys that fall under each
-// wildcard selection's namespace, keyed by that namespace. Keys keep the
+// wildcard selection.
+//
+// The result is keyed by the wildcard namespace and the keys keep the
 // attribute map's insertion order. A key matching several namespaces is
 // grouped under the first match only.
 func buildAttributeLookup(attributes pcommon.Map, selections []config.CompiledAttribute) map[string][]string {
@@ -39,6 +45,9 @@ func buildAttributeLookup(attributes pcommon.Map, selections []config.CompiledAt
 	return lookup
 }
 
+// getDDTags returns the ddtags slice of the given attributes.
+//
+// The slice is created if it does not exist yet.
 func getDDTags(attributes pcommon.Map) pcommon.Slice {
 	value, ok := attributes.Get(ddtagsKey)
 	if ok {
@@ -48,6 +57,10 @@ func getDDTags(attributes pcommon.Map) pcommon.Slice {
 	return attributes.PutEmptySlice(ddtagsKey)
 }
 
+// getTagsFormatted formats the given keys as Datadog tags.
+//
+// Every key that exists in the attributes becomes a "key:value" entry.
+// Keys that do not exist are skipped.
 func getTagsFormatted(attributes pcommon.Map, keys []string) []string {
 	values := make([]string, 0, len(keys))
 
@@ -61,6 +74,9 @@ func getTagsFormatted(attributes pcommon.Map, keys []string) []string {
 	return values
 }
 
+// addDDTags appends the given values to the ddtags slice of the attributes.
+//
+// The slice is grown once for all values before appending.
 func addDDTags(attributes Attributes, values []string) {
 	ddtags := getDDTags(attributes)
 	ddtags.EnsureCapacity(ddtags.Len() + len(values))
@@ -70,6 +86,11 @@ func addDDTags(attributes Attributes, values []string) {
 	}
 }
 
+// ExtractAttributeKeys resolves the statement's selections against the
+// given attributes.
+//
+// It returns the matched attribute keys in selection order and the same
+// keys formatted as "key:value" tags.
 func ExtractAttributeKeys(attributes pcommon.Map, cs config.CompiledStatement) (attributeKeys, ddTagsFormat []string) {
 	var lookup map[string][]string
 	if cs.HasWildcards {
@@ -94,8 +115,10 @@ func ExtractAttributeKeys(attributes pcommon.Map, cs config.CompiledStatement) (
 	return attributeKeys, ddTagsFormat
 }
 
-// RemoveAttributes deletes the given keys in a single pass over the map,
-// unlike per-key Remove calls which each rescan it.
+// RemoveAttributes deletes the given keys from the attributes.
+//
+// The keys are removed in a single pass over the map, unlike per-key Remove
+// calls which each rescan it. It is a no-op when keys is empty.
 func RemoveAttributes(attributes pcommon.Map, keys []string) {
 	if len(keys) == 0 {
 		return
@@ -106,6 +129,12 @@ func RemoveAttributes(attributes pcommon.Map, keys []string) {
 	})
 }
 
+// ProcessRecordAttributes applies a statement to the attributes of a single
+// record.
+//
+// For resource statements it only appends the precomputed resource tags.
+// For record statements it resolves the selections, appends the tags and,
+// in move mode, removes the matched attributes.
 func ProcessRecordAttributes(
 	attributes pcommon.Map,
 	cs config.CompiledStatement,

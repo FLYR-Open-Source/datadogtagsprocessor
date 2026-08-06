@@ -372,9 +372,9 @@ func TestProcessTraces_Move_WithWildcards(t *testing.T) {
 
 // The processor mutates data in place (Move strips the matched attributes,
 // Merge appends to ddtags), so each iteration must consume a fresh copy of
-// the input — reusing one object would make every iteration after the first
+// the input. Reusing one object would make every iteration after the first
 // process already-consumed data. The copy cost is included in each
-// measurement; BenchmarkLogs_Baseline_Copy isolates it so it can be
+// measurement. BenchmarkLogs_Baseline_Copy isolates it so it can be
 // subtracted.
 func benchmarkLogs(b *testing.B, statements []config.ContextStatements) {
 	factory := NewFactory()

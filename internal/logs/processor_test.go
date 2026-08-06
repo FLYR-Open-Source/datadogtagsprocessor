@@ -24,7 +24,7 @@ func (m *mockConsumer) Consume(context.Context, plog.Logs, config.CompiledStatem
 	return m.consumeErr
 }
 
-// mockShutdownableConsumer additionally implements config.Shutdownable.
+// mockShutdownableConsumer also implements config.Shutdownable.
 type mockShutdownableConsumer struct {
 	mockConsumer
 	shutdownErr error

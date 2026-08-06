@@ -14,6 +14,7 @@ import (
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/traces"
 )
 
+// NewFactory creates the factory for the datadog_tags processor.
 func NewFactory() processor.Factory {
 	return processor.NewFactory(
 		metadata.Type,
@@ -23,10 +24,12 @@ func NewFactory() processor.Factory {
 	)
 }
 
+// createDefaultConfig returns an empty processor configuration.
 func createDefaultConfig() component.Config {
 	return &Config{}
 }
 
+// createTraces builds the traces processor from the given configuration.
 func createTraces(ctx context.Context, set processor.Settings, cfg component.Config, nextConsumer consumer.Traces) (processor.Traces, error) {
 	oCfg, ok := cfg.(*Config)
 	if !ok {
@@ -49,6 +52,7 @@ func createTraces(ctx context.Context, set processor.Settings, cfg component.Con
 	)
 }
 
+// createLogs builds the logs processor from the given configuration.
 func createLogs(ctx context.Context, set processor.Settings, cfg component.Config, nextConsumer consumer.Logs) (processor.Logs, error) {
 	oCfg, ok := cfg.(*Config)
 	if !ok {

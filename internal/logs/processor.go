@@ -11,11 +11,18 @@ import (
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
 )
 
+// Processor applies the configured log statements to incoming batches.
 type Processor struct {
+	// contexts holds one entry per configured statement, in config order.
 	contexts []config.ProcessorContext[plog.Logs]
-	logger   *zap.Logger
+	// logger reports processing failures.
+	logger *zap.Logger
 }
 
+// NewProcessor compiles the configured statements and builds a processor.
+//
+// Compilation happens once here so the hot path never parses the
+// configuration again.
 func NewProcessor(contextStatements []config.ContextStatements, settings component.TelemetrySettings) (*Processor, error) {
 	contexts := make([]config.ProcessorContext[plog.Logs], len(contextStatements))
 
@@ -32,6 +39,10 @@ func NewProcessor(contextStatements []config.ContextStatements, settings compone
 	}, nil
 }
 
+// ConsumeLogs runs every configured statement against the batch.
+//
+// Statements run in config order. The first failure stops processing and
+// is returned.
 func (p *Processor) ConsumeLogs(ctx context.Context, ld plog.Logs) (plog.Logs, error) {
 	for _, c := range p.contexts {
 		err := c.Consumer.Consume(ctx, ld, c.CompiledStatement)
@@ -43,6 +54,10 @@ func (p *Processor) ConsumeLogs(ctx context.Context, ld plog.Logs) (plog.Logs, e
 	return ld, nil
 }
 
+// Shutdown shuts down every consumer that needs cleanup.
+//
+// All consumers are shut down and the errors are collected, so one failure
+// does not stop the rest.
 func (p *Processor) Shutdown(ctx context.Context) error {
 	var errors error
 
