@@ -8,7 +8,7 @@ Moves or merges resource and span/log attributes into the `ddtags` attribute for
 | Stability     | [alpha]: traces, logs   |
 | Distributions | [] |
 | Issues        | [![Open issues](https://img.shields.io/github/issues-search/FLYR-Open-Source/datadogtagsprocessor?query=is%3Aissue%20is%3Aopen%20label%3Aprocessor%2Fdatadogtags%20&label=open&color=orange&logo=opentelemetry)](https://github.com/FLYR-Open-Source/datadogtagsprocessor/issues?q=is%3Aopen+is%3Aissue+label%3Aprocessor%2Fdatadogtags) [![Closed issues](https://img.shields.io/github/issues-search/FLYR-Open-Source/datadogtagsprocessor?query=is%3Aissue%20is%3Aclosed%20label%3Aprocessor%2Fdatadogtags%20&label=closed&color=blue&logo=opentelemetry)](https://github.com/FLYR-Open-Source/datadogtagsprocessor/issues?q=is%3Aclosed+is%3Aissue+label%3Aprocessor%2Fdatadogtags) |
-| Code coverage | [![codecov](https://codecov.io/github/FLYR-Open-Source/datadogtagsprocessor/graph/main/badge.svg?component=processor_datadogtags)](https://app.codecov.io/gh/FLYR-Open-Source/datadogtagsprocessor/tree/main/?components%5B0%5D=processor_datadogtags&displayType=list) |
+| Code coverage | [![codecov](https://codecov.io/gh/FLYR-Open-Source/datadogtagsprocessor/branch/main/graph/badge.svg)](https://app.codecov.io/gh/FLYR-Open-Source/datadogtagsprocessor) |
 | [Code Owners](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/CONTRIBUTING.md#becoming-a-code-owner)    | [@vspallas-flyr](https://www.github.com/vspallas-flyr) |
 
 [alpha]: https://github.com/open-telemetry/opentelemetry-collector/blob/main/docs/component-stability.md#alpha

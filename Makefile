@@ -16,6 +16,10 @@ mdatagen:
 test:
 	go test ./...
 
+.PHONY: coverage
+coverage:
+	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+
 .PHONY: bench
 bench:
 	go test -bench=. -benchmem
