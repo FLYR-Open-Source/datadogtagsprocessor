@@ -16,8 +16,6 @@ import (
 	"go.opentelemetry.io/collector/processor/processortest"
 )
 
-const ddtagsKey = "ddtags"
-
 // Test Logs Processing
 func TestProcessLogs_Merge_WithoutWildcards(t *testing.T) {
 	factory := NewFactory()

@@ -1,6 +1,7 @@
 package extraction
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
@@ -8,6 +9,19 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 )
+
+// ddtagsEntries splits a ddtags attribute into the individual tags Datadog
+// reads out of it, so the assertions do not depend on their order.
+func ddtagsEntries(value pcommon.Value) []any {
+	tags := strings.Split(value.Str(), ",")
+
+	entries := make([]any, 0, len(tags))
+	for _, tag := range tags {
+		entries = append(entries, tag)
+	}
+
+	return entries
+}
 
 // compileAttributes builds compiled selections from config syntax
 // (e.g. "k8s.*"). Wildcard parsing itself is covered by the Compile tests in
@@ -91,45 +105,76 @@ func TestRemoveAttributes_NoKeysIsNoop(t *testing.T) {
 }
 
 func TestGetDDTags(t *testing.T) {
-	t.Run("should create ddtags when it does not exist", func(t *testing.T) {
+	t.Run("should be empty when ddtags does not exist", func(t *testing.T) {
 		attributes := pcommon.NewMap()
 
-		getDDTags(attributes)
+		assert.Empty(t, getDDTags(attributes))
 
-		ddtags, ok := attributes.Get(ddtagsKey)
-
-		assert.True(t, ok)
-		assert.Empty(t, ddtags.Slice().AsRaw())
+		// Reading the tags must not add the attribute.
+		_, ok := attributes.Get(ddtagsKey)
+		assert.False(t, ok)
 	})
 
-	t.Run("should not overwrite existing ddtags", func(t *testing.T) {
+	t.Run("should return an existing string as written", func(t *testing.T) {
+		attributes := pcommon.NewMap()
+		attributes.PutStr(ddtagsKey, "existing:value,team:payments")
+
+		assert.Equal(t, "existing:value,team:payments", getDDTags(attributes))
+	})
+
+	// An earlier version of the processor wrote a slice, and so does another
+	// instance of an older build sitting upstream.
+	t.Run("should join an existing slice", func(t *testing.T) {
 		attributes := pcommon.NewMap()
 
 		ddtags := attributes.PutEmptySlice(ddtagsKey)
 		ddtags.AppendEmpty().SetStr("existing:value")
+		ddtags.AppendEmpty().SetStr("team:payments")
 
-		getDDTags(attributes)
+		assert.Equal(t, "existing:value,team:payments", getDDTags(attributes))
+	})
 
-		value, ok := attributes.Get(ddtagsKey)
+	t.Run("should render any other type as a string", func(t *testing.T) {
+		attributes := pcommon.NewMap()
+		attributes.PutInt(ddtagsKey, 42)
 
-		assert.True(t, ok)
-		assert.Equal(t, []any{"existing:value"}, value.Slice().AsRaw())
+		assert.Equal(t, "42", getDDTags(attributes))
 	})
 }
 
-func TestAddDDTag(t *testing.T) {
-	attributes := pcommon.NewMap()
+func TestAddDDTags(t *testing.T) {
+	t.Run("should write the tags as a comma separated string", func(t *testing.T) {
+		attributes := pcommon.NewMap()
 
-	addDDTags(attributes, []string{"service.name:my-service"})
+		addDDTags(attributes, []string{"service.name:my-service", "team:payments"})
 
-	ddtags, ok := attributes.Get(ddtagsKey)
+		ddtags, ok := attributes.Get(ddtagsKey)
 
-	assert.True(t, ok)
-	assert.Equal(
-		t,
-		[]any{"service.name:my-service"},
-		ddtags.Slice().AsRaw(),
-	)
+		require.True(t, ok)
+		require.Equal(t, pcommon.ValueTypeStr, ddtags.Type())
+		assert.Equal(t, "service.name:my-service,team:payments", ddtags.Str())
+	})
+
+	t.Run("should keep the tags an upstream collector left behind", func(t *testing.T) {
+		attributes := pcommon.NewMap()
+		attributes.PutStr(ddtagsKey, "team:payments")
+
+		addDDTags(attributes, []string{"service.name:my-service"})
+
+		ddtags, ok := attributes.Get(ddtagsKey)
+
+		require.True(t, ok)
+		assert.Equal(t, "team:payments,service.name:my-service", ddtags.Str())
+	})
+
+	t.Run("should not add the attribute when there are no tags", func(t *testing.T) {
+		attributes := pcommon.NewMap()
+
+		addDDTags(attributes, nil)
+
+		_, ok := attributes.Get(ddtagsKey)
+		assert.False(t, ok)
+	})
 }
 
 func TestExtractAttributeKeys(t *testing.T) {
@@ -256,7 +301,7 @@ func TestExtractAttributes_Merge(t *testing.T) {
 	assert.ElementsMatch(
 		t,
 		[]any{"service.name:my-service"},
-		ddtags.Slice().AsRaw(),
+		ddtagsEntries(ddtags),
 	)
 }
 
@@ -289,7 +334,7 @@ func TestExtractAttributes_Move(t *testing.T) {
 	assert.ElementsMatch(
 		t,
 		[]any{"service.name:my-service"},
-		ddtags.Slice().AsRaw(),
+		ddtagsEntries(ddtags),
 	)
 }
 
@@ -315,7 +360,7 @@ func TestExtractAttributes_MergeWildcard(t *testing.T) {
 			"k8s.cluster.name:cluster",
 			"k8s.cluster.uid:123",
 		},
-		ddtags.Slice().AsRaw(),
+		ddtagsEntries(ddtags),
 	)
 
 	// Merge should leave the source attributes untouched.
@@ -358,7 +403,7 @@ func TestExtractAttributes_MoveWildcard(t *testing.T) {
 			"k8s.cluster.name:cluster",
 			"k8s.cluster.uid:123",
 		},
-		ddtags.Slice().AsRaw(),
+		ddtagsEntries(ddtags),
 	)
 
 	_, exists := attributes.Get("k8s.cluster.name")
@@ -396,7 +441,7 @@ func TestExtractAttributes_PreservesExistingDDTags(t *testing.T) {
 			"existing:value",
 			"service.name:my-service",
 		},
-		result.Slice().AsRaw(),
+		ddtagsEntries(result),
 	)
 }
 
@@ -424,7 +469,7 @@ func TestExtractAttributes_DifferentSourceAndDestination(t *testing.T) {
 	assert.ElementsMatch(
 		t,
 		[]any{"k8s.cluster.name:cluster-a", "k8s.cluster.uid:123"},
-		ddtags.Slice().AsRaw(),
+		ddtagsEntries(ddtags),
 	)
 
 	// The source has no ddtags key of its own, and the moved keys are gone.
@@ -569,12 +614,11 @@ func TestProcessRecordAttributes(t *testing.T) {
 			} else {
 				require.True(t, ok)
 
-				slice := ddtags.Slice()
-				require.Equal(t, len(tt.expectedDDTags), slice.Len())
-
-				for i, expected := range tt.expectedDDTags {
-					require.Equal(t, expected, slice.At(i).Str())
-				}
+				require.Equal(
+					t,
+					strings.Join(tt.expectedDDTags, ","),
+					ddtags.Str(),
+				)
 			}
 
 			for key, expected := range tt.expectedAttributes {

@@ -80,7 +80,7 @@ func TestProcessor_ConsumeLogs(t *testing.T) {
 
 		resourceDdtags, ok := log.Attributes().Get("ddtags")
 		assert.True(t, ok)
-		assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a", "team:payments"}, resourceDdtags.Slice().AsRaw())
+		assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a", "team:payments"}, ddtagsEntries(resourceDdtags))
 
 	})
 
