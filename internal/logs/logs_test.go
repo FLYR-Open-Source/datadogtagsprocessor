@@ -1,12 +1,27 @@
 package logs
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
 	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 )
+
+// ddtagsEntries splits a ddtags attribute into the individual tags Datadog
+// reads out of it, so the assertions do not depend on their order.
+func ddtagsEntries(value pcommon.Value) []any {
+	tags := strings.Split(value.Str(), ",")
+
+	entries := make([]any, 0, len(tags))
+	for _, tag := range tags {
+		entries = append(entries, tag)
+	}
+
+	return entries
+}
 
 func buildLogs() plog.Logs {
 	logs := plog.NewLogs()
@@ -72,7 +87,7 @@ func TestLogStatements_Consume_ResourceContext(t *testing.T) {
 	for i := 0; i < rlogs.ScopeLogs().At(0).LogRecords().Len(); i++ {
 		ddtags, ok := rlogs.ScopeLogs().At(0).LogRecords().At(i).Attributes().Get("ddtags")
 		assert.True(t, ok)
-		assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+		assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsEntries(ddtags))
 	}
 }
 
@@ -92,11 +107,11 @@ func TestLogStatements_Consume_LogContext(t *testing.T) {
 
 	ddtags1, ok := slogs.LogRecords().At(0).Attributes().Get("ddtags")
 	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"team:payments"}, ddtags1.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"team:payments"}, ddtagsEntries(ddtags1))
 
 	ddtags2, ok := slogs.LogRecords().At(1).Attributes().Get("ddtags")
 	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"team:my-service"}, ddtags2.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"team:my-service"}, ddtagsEntries(ddtags2))
 }
 
 func TestLogStatements_Consume_MultipleResources(t *testing.T) {
@@ -124,10 +139,10 @@ func TestLogStatements_Consume_MultipleResources(t *testing.T) {
 	assert.NoError(t, err)
 
 	ddtagsA, _ := logA.Attributes().Get("ddtags")
-	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsA.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsEntries(ddtagsA))
 
 	ddtagsB, _ := logB.Attributes().Get("ddtags")
-	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-b"}, ddtagsB.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-b"}, ddtagsEntries(ddtagsB))
 
 	// Neither resource's tags leak onto the other's log records.
 	_, ok := rlogsA.Resource().Attributes().Get("ddtags")
@@ -156,7 +171,7 @@ func TestLogStatements_Consume_Move(t *testing.T) {
 
 	ddtags, ok := log.Attributes().Get("ddtags")
 	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"team:payments"}, ddtags.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"team:payments"}, ddtagsEntries(ddtags))
 }
 
 func TestLogStatements_Consume_ResourceContext_Move(t *testing.T) {
@@ -191,15 +206,15 @@ func TestLogStatements_Consume_ResourceContext_Move(t *testing.T) {
 
 	ddtags, ok := log1.Attributes().Get("ddtags")
 	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsEntries(ddtags))
 
 	ddtags, ok = log2.Attributes().Get("ddtags")
 	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsEntries(ddtags))
 
 	ddtags, ok = log3.Attributes().Get("ddtags")
 	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsEntries(ddtags))
 }
 
 func TestLogStatements_Consume_NoResourceLogs(t *testing.T) {

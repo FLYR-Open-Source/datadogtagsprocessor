@@ -17,10 +17,10 @@ Moves or merges resource and span/log attributes into the `ddtags` attribute for
 The datadog_tags processor moves or merges resource attributes and span/log attributes into the
 `ddtags` attribute, so that these values are surfaced as [tags in Datadog](https://docs.datadoghq.com/getting_started/tagging/).
 
-The Datadog exporter reads the `ddtags` attribute (a list of `key:value` strings) off resources,
-spans, and log records and turns each entry into a Datadog tag. This processor is what populates
-that attribute from arbitrary resource/span/log attributes, without needing a full OTTL
-transformation.
+The Datadog exporter reads the `ddtags` attribute off resources, spans, and log records and turns
+it into Datadog tags. The attribute is a single string holding comma separated `key:value` tags,
+which is the format Datadog splits on. This processor is what populates that attribute from
+arbitrary resource/span/log attributes, without needing a full OTTL transformation.
 
 ## Configuration
 
@@ -37,7 +37,9 @@ Each statement has:
 | `context`    | Where to read the attributes from: `resource`, `span` (traces only), or `log` (logs only).                        |
 | `attributes` | List of attribute keys to copy into `ddtags`. A trailing `.*` matches all attributes under that namespace.         |
 
-Attributes are written into `ddtags` as `key:value` strings, matching the format Datadog expects.
+Attributes are written into `ddtags` as comma separated `key:value` tags, matching the format
+Datadog expects. Tags already in the attribute are kept, so a statement adds to them rather than
+replacing them.
 
 ```yaml
 processors:
@@ -124,11 +126,7 @@ cloud.provider: gcp
 # log record attributes
 team: checkout
 request.id: req-abc123
-ddtags:
-  - k8s.namespace.name:my-namespace
-  - k8s.pod.name:my-pod
-  - service.name:my-service
-  - team:checkout
+ddtags: k8s.namespace.name:my-namespace,k8s.pod.name:my-pod,service.name:my-service,team:checkout
 ```
 
 ### Move
@@ -158,11 +156,7 @@ cloud.provider: gcp
 
 # log record attributes ("team" removed)
 request.id: req-abc123
-ddtags:
-  - k8s.namespace.name:my-namespace
-  - k8s.pod.name:my-pod
-  - service.name:my-service
-  - team:checkout
+ddtags: k8s.namespace.name:my-namespace,k8s.pod.name:my-pod,service.name:my-service,team:checkout
 ```
 
 `cloud.provider` and `request.id` stay in both modes because no statement selects them,

@@ -1,12 +1,27 @@
 package traces
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
 	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 )
+
+// ddtagsEntries splits a ddtags attribute into the individual tags Datadog
+// reads out of it, so the assertions do not depend on their order.
+func ddtagsEntries(value pcommon.Value) []any {
+	tags := strings.Split(value.Str(), ",")
+
+	entries := make([]any, 0, len(tags))
+	for _, tag := range tags {
+		entries = append(entries, tag)
+	}
+
+	return entries
+}
 
 func buildTraces() ptrace.Traces {
 	traces := ptrace.NewTraces()
@@ -73,7 +88,7 @@ func TestTraceStatements_Consume_ResourceContext(t *testing.T) {
 		ddtags, ok := rspans.ScopeSpans().At(0).Spans().At(i).Attributes().Get("ddtags")
 
 		assert.True(t, ok)
-		assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+		assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsEntries(ddtags))
 	}
 }
 
@@ -93,11 +108,11 @@ func TestTraceStatements_Consume_SpanContext(t *testing.T) {
 
 	ddtags1, ok := sspans.Spans().At(0).Attributes().Get("ddtags")
 	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"team:payments"}, ddtags1.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"team:payments"}, ddtagsEntries(ddtags1))
 
 	ddtags2, ok := sspans.Spans().At(1).Attributes().Get("ddtags")
 	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"team:my-service"}, ddtags2.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"team:my-service"}, ddtagsEntries(ddtags2))
 }
 
 func TestTraceStatements_Consume_MultipleResources(t *testing.T) {
@@ -125,10 +140,10 @@ func TestTraceStatements_Consume_MultipleResources(t *testing.T) {
 	assert.NoError(t, err)
 
 	ddtagsA, _ := spanA.Attributes().Get("ddtags")
-	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsA.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsEntries(ddtagsA))
 
 	ddtagsB, _ := spanB.Attributes().Get("ddtags")
-	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-b"}, ddtagsB.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-b"}, ddtagsEntries(ddtagsB))
 
 	// Neither resource's tags leak onto the other's spans.
 	_, ok := rspansA.Resource().Attributes().Get("ddtags")
@@ -157,7 +172,7 @@ func TestTraceStatements_Consume_Move(t *testing.T) {
 
 	ddtags, ok := span.Attributes().Get("ddtags")
 	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"team:payments"}, ddtags.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"team:payments"}, ddtagsEntries(ddtags))
 }
 
 func TestTraceStatements_Consume_ResourceContext_Move(t *testing.T) {
@@ -192,15 +207,15 @@ func TestTraceStatements_Consume_ResourceContext_Move(t *testing.T) {
 
 	ddtags, ok := span1.Attributes().Get("ddtags")
 	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsEntries(ddtags))
 
 	ddtags, ok = span2.Attributes().Get("ddtags")
 	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsEntries(ddtags))
 
 	ddtags, ok = span3.Attributes().Get("ddtags")
 	assert.True(t, ok)
-	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtags.Slice().AsRaw())
+	assert.ElementsMatch(t, []any{"k8s.cluster.name:cluster-a"}, ddtagsEntries(ddtags))
 }
 
 func TestTraceStatements_Consume_NoResourceSpans(t *testing.T) {

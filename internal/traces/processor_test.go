@@ -80,7 +80,7 @@ func TestProcessor_ConsumeTraces(t *testing.T) {
 
 		spanDdtags, ok := result.ResourceSpans().At(0).ScopeSpans().At(0).Spans().At(0).Attributes().Get("ddtags")
 		assert.True(t, ok)
-		assert.ElementsMatch(t, []any{"team:payments", "k8s.cluster.name:cluster-a"}, spanDdtags.Slice().AsRaw())
+		assert.ElementsMatch(t, []any{"team:payments", "k8s.cluster.name:cluster-a"}, ddtagsEntries(spanDdtags))
 	})
 
 	t.Run("stops and returns error on first failing consumer", func(t *testing.T) {

@@ -87,18 +87,7 @@ resourceLogs:
                   stringValue: order
               - key: ddtags
                 value:
-                  arrayValue:
-                    values:
-                      - stringValue: team:order
-                      - stringValue: k8s.deployment.name:my-deployment
-                      - stringValue: k8s.namespace.name:my-namespace
-                      - stringValue: k8s.pod.name:my-deployment-59ddb85bd5-xyz12
-                      - stringValue: k8s.container.name:main
-                      - stringValue: k8s.replicaset.name:my-deployment-59ddb85bd5
-                      - stringValue: service.name:my-service
-                      - stringValue: service.version:1.2.3
-                      - stringValue: deployment.environment.name:prd
-                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
+                  stringValue: team:order,k8s.deployment.name:my-deployment,k8s.namespace.name:my-namespace,k8s.pod.name:my-deployment-59ddb85bd5-xyz12,k8s.container.name:main,k8s.replicaset.name:my-deployment-59ddb85bd5,service.name:my-service,service.version:1.2.3,deployment.environment.name:prd,host.name:gke-cluster-a-default-pool-abc123
             body:
               stringValue: Successfully retrieved order 12345
           - attributes:
@@ -122,18 +111,7 @@ resourceLogs:
                   stringValue: order
               - key: ddtags
                 value:
-                  arrayValue:
-                    values:
-                      - stringValue: team:order
-                      - stringValue: k8s.deployment.name:my-deployment
-                      - stringValue: k8s.namespace.name:my-namespace
-                      - stringValue: k8s.pod.name:my-deployment-59ddb85bd5-xyz12
-                      - stringValue: k8s.container.name:main
-                      - stringValue: k8s.replicaset.name:my-deployment-59ddb85bd5
-                      - stringValue: service.name:my-service
-                      - stringValue: service.version:1.2.3
-                      - stringValue: deployment.environment.name:prd
-                      - stringValue: host.name:gke-cluster-a-default-pool-abc123
+                  stringValue: team:order,k8s.deployment.name:my-deployment,k8s.namespace.name:my-namespace,k8s.pod.name:my-deployment-59ddb85bd5-xyz12,k8s.container.name:main,k8s.replicaset.name:my-deployment-59ddb85bd5,service.name:my-service,service.version:1.2.3,deployment.environment.name:prd,host.name:gke-cluster-a-default-pool-abc123
             body:
               stringValue: Successfully retrieved order 67890
         scope: {}

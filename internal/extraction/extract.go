@@ -11,6 +11,9 @@ import (
 const (
 	// ddtagsKey is the attribute that holds the Datadog tags.
 	ddtagsKey = "ddtags"
+	// tagSeparator joins the tags inside the ddtags attribute. Datadog
+	// splits the attribute on it to get the individual tags.
+	tagSeparator = ","
 )
 
 // ResourceAttributes is the attribute map of a resource.
@@ -45,16 +48,29 @@ func buildAttributeLookup(attributes pcommon.Map, selections []config.CompiledAt
 	return lookup
 }
 
-// getDDTags returns the ddtags slice of the given attributes.
+// getDDTags returns the tags already held by the ddtags attribute.
 //
-// The slice is created if it does not exist yet.
-func getDDTags(attributes pcommon.Map) pcommon.Slice {
+// Datadog reads ddtags as a single string of comma separated tags, so the
+// value is returned as it will be sent. A missing attribute gives an empty
+// string.
+func getDDTags(attributes pcommon.Map) string {
 	value, ok := attributes.Get(ddtagsKey)
-	if ok {
-		return value.Slice()
+	if !ok {
+		return ""
 	}
 
-	return attributes.PutEmptySlice(ddtagsKey)
+	if value.Type() != pcommon.ValueTypeSlice {
+		return value.AsString()
+	}
+
+	slice := value.Slice()
+	tags := make([]string, 0, slice.Len())
+
+	for i := 0; i < slice.Len(); i++ {
+		tags = append(tags, slice.At(i).AsString())
+	}
+
+	return strings.Join(tags, tagSeparator)
 }
 
 // getTagsFormatted formats the given keys as Datadog tags.
@@ -74,16 +90,22 @@ func getTagsFormatted(attributes pcommon.Map, keys []string) []string {
 	return values
 }
 
-// addDDTags appends the given values to the ddtags slice of the attributes.
+// addDDTags appends the given values to the ddtags attribute.
 //
-// The slice is grown once for all values before appending.
+// The tags are written as one comma separated string, the format Datadog
+// expects. Tags already in the attribute are kept ahead of the new ones.
 func addDDTags(attributes Attributes, values []string) {
-	ddtags := getDDTags(attributes)
-	ddtags.EnsureCapacity(ddtags.Len() + len(values))
-
-	for _, value := range values {
-		ddtags.AppendEmpty().SetStr(value)
+	if len(values) == 0 {
+		return
 	}
+
+	tags := strings.Join(values, tagSeparator)
+
+	if existing := getDDTags(attributes); existing != "" {
+		tags = existing + tagSeparator + tags
+	}
+
+	attributes.PutStr(ddtagsKey, tags)
 }
 
 // ExtractAttributeKeys resolves the statement's selections against the
