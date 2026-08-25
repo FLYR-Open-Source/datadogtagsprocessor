@@ -1,42 +1,42 @@
 datadog_tags:
   trace_statements:
-    - mode: merge
+    - mode: copy
       context: resource
       attributes:
       - k8s.*
       - host.cpu.cache.l2.sizestring
-    - mode: merge
+    - mode: copy
       context: span
       attributes:
       - team
   log_statements:
-    - mode: merge
+    - mode: copy
       context: resource
       attributes:
       - k8s.*
       - host.cpu.cache.l2.sizestring
-    - mode: merge
+    - mode: copy
       context: log
       attributes:
       - team
 
 datadog_tags/with_empty_context:
   trace_statements:
-    - mode: merge
+    - mode: copy
       attributes:
       - k8s.*
       - host.cpu.cache.l2.sizestring
   log_statements:
-    - mode: merge
+    - mode: copy
       attributes:
       - team
 
 datadog_tags/with_empty_attributes:
   trace_statements:
-    - mode: merge
+    - mode: copy
       context: resource
       attributes: []
   log_statements:
-    - mode: merge
+    - mode: copy
       context: log
       attributes: []

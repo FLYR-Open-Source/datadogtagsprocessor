@@ -27,24 +27,24 @@ func Test_LoadConfig(t *testing.T) {
 			expected: &Config{
 				TraceStatements: []config.ContextStatements{
 					{
-						Mode:       config.Merge,
+						Mode:       config.Copy,
 						Context:    config.Resource,
 						Attributes: []string{"k8s.*", "host.cpu.cache.l2.sizestring"},
 					},
 					{
-						Mode:       config.Merge,
+						Mode:       config.Copy,
 						Context:    config.Span,
 						Attributes: []string{"team"},
 					},
 				},
 				LogStatements: []config.ContextStatements{
 					{
-						Mode:       config.Merge,
+						Mode:       config.Copy,
 						Context:    config.Resource,
 						Attributes: []string{"k8s.*", "host.cpu.cache.l2.sizestring"},
 					},
 					{
-						Mode:       config.Merge,
+						Mode:       config.Copy,
 						Context:    config.Log,
 						Attributes: []string{"team"},
 					},

@@ -24,14 +24,14 @@ func TestProcessLogs_Merge_WithoutWildcards(t *testing.T) {
 
 	oCfg.LogStatements = []config.ContextStatements{
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "log",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.deployment.name",
@@ -52,7 +52,7 @@ func TestProcessLogs_Merge_WithoutWildcards(t *testing.T) {
 
 	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
 	require.NoError(t, err)
-	expected, err := golden.ReadLogs(filepath.Join("testdata", "logs", "merge", "expected-without-wildcards.yaml"))
+	expected, err := golden.ReadLogs(filepath.Join("testdata", "logs", "copy", "expected-without-wildcards.yaml"))
 	require.NoError(t, err)
 
 	require.NoError(t, p.ConsumeLogs(t.Context(), input))
@@ -70,14 +70,14 @@ func TestProcessLogs_Merge_WithWildcards(t *testing.T) {
 
 	oCfg.LogStatements = []config.ContextStatements{
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "log",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.*",
@@ -93,7 +93,7 @@ func TestProcessLogs_Merge_WithWildcards(t *testing.T) {
 
 	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
 	require.NoError(t, err)
-	expected, err := golden.ReadLogs(filepath.Join("testdata", "logs", "merge", "expected-with-wildcards.yaml"))
+	expected, err := golden.ReadLogs(filepath.Join("testdata", "logs", "copy", "expected-with-wildcards.yaml"))
 	require.NoError(t, err)
 
 	require.NoError(t, p.ConsumeLogs(t.Context(), input))
@@ -199,14 +199,14 @@ func TestProcessTraces_Merge_WithoutWildcards(t *testing.T) {
 
 	oCfg.TraceStatements = []config.ContextStatements{
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "span",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.deployment.name",
@@ -227,7 +227,7 @@ func TestProcessTraces_Merge_WithoutWildcards(t *testing.T) {
 
 	input, err := golden.ReadTraces(filepath.Join("testdata", "traces", "input.yaml"))
 	require.NoError(t, err)
-	expected, err := golden.ReadTraces(filepath.Join("testdata", "traces", "merge", "expected-without-wildcards.yaml"))
+	expected, err := golden.ReadTraces(filepath.Join("testdata", "traces", "copy", "expected-without-wildcards.yaml"))
 	require.NoError(t, err)
 
 	require.NoError(t, p.ConsumeTraces(t.Context(), input))
@@ -245,14 +245,14 @@ func TestProcessTraces_Merge_WithWildcards(t *testing.T) {
 
 	oCfg.TraceStatements = []config.ContextStatements{
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "span",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.*",
@@ -268,7 +268,7 @@ func TestProcessTraces_Merge_WithWildcards(t *testing.T) {
 
 	input, err := golden.ReadTraces(filepath.Join("testdata", "traces", "input.yaml"))
 	require.NoError(t, err)
-	expected, err := golden.ReadTraces(filepath.Join("testdata", "traces", "merge", "expected-with-wildcards.yaml"))
+	expected, err := golden.ReadTraces(filepath.Join("testdata", "traces", "copy", "expected-with-wildcards.yaml"))
 	require.NoError(t, err)
 
 	require.NoError(t, p.ConsumeTraces(t.Context(), input))
@@ -369,7 +369,7 @@ func TestProcessTraces_Move_WithWildcards(t *testing.T) {
 // Log Processing Benchmarks
 
 // The processor mutates data in place (Move strips the matched attributes,
-// Merge appends to ddtags), so each iteration must consume a fresh copy of
+// Copy appends to ddtags), so each iteration must consume a fresh copy of
 // the input. Reusing one object would make every iteration after the first
 // process already-consumed data. The copy cost is included in each
 // measurement. BenchmarkLogs_Baseline_Copy isolates it so it can be
@@ -387,33 +387,28 @@ func benchmarkLogs(b *testing.B, statements []config.ContextStatements) {
 	require.NoError(b, err)
 
 	for b.Loop() {
+		b.StopTimer()
 		cp := plog.NewLogs()
 		input.CopyTo(cp)
-		require.NoError(b, p.ConsumeLogs(b.Context(), cp))
-	}
-}
 
-func BenchmarkLogs_Baseline_Copy(b *testing.B) {
-	input, err := golden.ReadLogs(filepath.Join("testdata", "logs", "input.yaml"))
-	require.NoError(b, err)
+		b.StartTimer()
+		err := p.ConsumeLogs(b.Context(), cp)
 
-	for b.Loop() {
-		cp := plog.NewLogs()
-		input.CopyTo(cp)
+		require.NoError(b, err)
 	}
 }
 
 func BenchmarkLogs_Merge_WithoutWildcards(b *testing.B) {
 	benchmarkLogs(b, []config.ContextStatements{
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "log",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.deployment.name",
@@ -433,14 +428,14 @@ func BenchmarkLogs_Merge_WithoutWildcards(b *testing.B) {
 func BenchmarkLogs_Merge_WithWildcards(b *testing.B) {
 	benchmarkLogs(b, []config.ContextStatements{
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "log",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.*",
@@ -518,33 +513,27 @@ func benchmarkTraces(b *testing.B, statements []config.ContextStatements) {
 	require.NoError(b, err)
 
 	for b.Loop() {
+		b.StopTimer()
 		cp := ptrace.NewTraces()
 		input.CopyTo(cp)
-		require.NoError(b, p.ConsumeTraces(b.Context(), cp))
-	}
-}
 
-func BenchmarkTraces_Baseline_Copy(b *testing.B) {
-	input, err := golden.ReadTraces(filepath.Join("testdata", "traces", "input.yaml"))
-	require.NoError(b, err)
-
-	for b.Loop() {
-		cp := ptrace.NewTraces()
-		input.CopyTo(cp)
+		b.StartTimer()
+		err := p.ConsumeTraces(b.Context(), cp)
+		require.NoError(b, err)
 	}
 }
 
 func BenchmarkTraces_Merge_WithoutWildcards(b *testing.B) {
 	benchmarkTraces(b, []config.ContextStatements{
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "span",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.deployment.name",
@@ -564,14 +553,14 @@ func BenchmarkTraces_Merge_WithoutWildcards(b *testing.B) {
 func BenchmarkTraces_Merge_WithWildcards(b *testing.B) {
 	benchmarkTraces(b, []config.ContextStatements{
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "span",
 			Attributes: []string{
 				"team",
 			},
 		},
 		{
-			Mode:    config.Merge,
+			Mode:    config.Copy,
 			Context: "resource",
 			Attributes: []string{
 				"k8s.*",
