@@ -10,8 +10,8 @@ import (
 	"github.com/go-jose/go-jose/v4/testutils/require"
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/confmap"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
-	"go.opentelemetry.io/collector/confmap/xconfmap"
 )
 
 func Test_LoadConfig(t *testing.T) {
@@ -82,7 +82,7 @@ func Test_LoadConfig(t *testing.T) {
 			require.NoError(t, sub.Unmarshal(cfg))
 
 			if test.expected == nil {
-				err = xconfmap.Validate(cfg)
+				err = confmap.Validate(cfg)
 				assert.Error(t, err)
 
 				if len(test.errors) > 0 {
@@ -91,7 +91,7 @@ func Test_LoadConfig(t *testing.T) {
 					}
 				}
 			} else {
-				require.NoError(t, xconfmap.Validate(cfg))
+				require.NoError(t, confmap.Validate(cfg))
 				assert.EqualExportedValues(t, test.expected, cfg)
 			}
 		})
