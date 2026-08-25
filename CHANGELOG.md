@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/FLYR-Open-Source/datadogtagsprocessor/compare/v0.2.0...v0.2.1) (2026-08-25)
+
+
+### Bug Fixes
+
+* config tests ([#12](https://github.com/FLYR-Open-Source/datadogtagsprocessor/issues/12)) ([ad8b1d2](https://github.com/FLYR-Open-Source/datadogtagsprocessor/commit/ad8b1d24b8998a7fac7f262edfbfcd520e83724f))
+
 ## [0.2.0](https://github.com/FLYR-Open-Source/datadogtagsprocessor/compare/v0.1.2...v0.2.0) (2026-08-25)
 
 
