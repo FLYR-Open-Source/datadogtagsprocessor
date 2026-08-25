@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/FLYR-Open-Source/datadogtagsprocessor/compare/v0.1.2...v0.2.0) (2026-08-25)
+
+
+### Features
+
+* rename merge mode to copy ([#8](https://github.com/FLYR-Open-Source/datadogtagsprocessor/issues/8)) ([bac1da8](https://github.com/FLYR-Open-Source/datadogtagsprocessor/commit/bac1da8873556f353a519377d885a0382d5fa7e4))
+
 ## [0.1.2](https://github.com/FLYR-Open-Source/datadogtagsprocessor/compare/v0.1.1...v0.1.2) (2026-08-25)
 
 
