@@ -88,8 +88,6 @@ go.opentelemetry.io/collector/confmap v1.63.0 h1:1THBabHoQc8t/9r6ztMsghiO1OxDPZp
 go.opentelemetry.io/collector/confmap v1.63.0/go.mod h1:ksJNAmLTiMkBjMYwXFW1MRRfXYnRsHXA0fW+ZGwb/1U=
 go.opentelemetry.io/collector/confmap/provider/fileprovider v1.63.0 h1:96T0xzThGGb4plk3Fpw3OPPCdcLHwR+0pQEi4kgctAw=
 go.opentelemetry.io/collector/confmap/provider/fileprovider v1.63.0/go.mod h1:Vr2w0lMtihP4YxpYMzWE2zbHD07v2IfwAimGASTrNA8=
-go.opentelemetry.io/collector/confmap/xconfmap v0.157.0 h1:jZV8p2wMQhq0ktl1/LAFGOXMCzzfMq56r80r41kKoEs=
-go.opentelemetry.io/collector/confmap/xconfmap v0.157.0/go.mod h1:W1wZk6YJ3+IyvIZEmkXH/ejwkUtBV2zCThY6ewZYd6E=
 go.opentelemetry.io/collector/consumer v1.63.0 h1:0eOZh0qmDg6HCJaiUqI9FAb4BD4fKJNNO+ygMV/WW0w=
 go.opentelemetry.io/collector/consumer v1.63.0/go.mod h1:IVhjv4d+PmSf4Ttz/guJFbWJtRM3Ld3nRcZ12gxy6PA=
 go.opentelemetry.io/collector/consumer/consumertest v0.157.0 h1:zehAVaLn67AWLhhi/LrUY0Tv06XWx5LYCvvmu7xHXHU=
