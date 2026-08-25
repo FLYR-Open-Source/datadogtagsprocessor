@@ -3,7 +3,6 @@ package datadogtagsprocessor
 import (
 	"go.opentelemetry.io/collector/component"
 	"go.uber.org/multierr"
-	"go.uber.org/zap"
 
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/config"
 	"github.com/FLYR-Open-Source/datadogtagsprocessor/internal/logs"
@@ -16,9 +15,6 @@ type Config struct {
 	TraceStatements []config.ContextStatements `mapstructure:"trace_statements"`
 	// LogStatements are the statements applied to logs.
 	LogStatements []config.ContextStatements `mapstructure:"log_statements"`
-
-	// logger is the processor logger.
-	logger *zap.Logger
 }
 
 // Validate checks every configured statement at config load time.
