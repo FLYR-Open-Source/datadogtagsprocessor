@@ -363,7 +363,7 @@ func TestExtractAttributes_MergeWildcard(t *testing.T) {
 		ddtagsEntries(ddtags),
 	)
 
-	// Merge should leave the source attributes untouched.
+	// Copy should leave the source attributes untouched.
 	clusterName, ok := attributes.Get("k8s.cluster.name")
 	assert.True(t, ok)
 	assert.Equal(t, "cluster", clusterName.AsString())
@@ -497,7 +497,7 @@ func TestProcessRecordAttributes(t *testing.T) {
 			},
 			cs: config.ContextStatements{
 				Context: config.Resource,
-				Mode:    config.Merge,
+				Mode:    config.Copy,
 			},
 			resourceAttributeTags: []string{
 				"service.name:my-service",
@@ -512,14 +512,14 @@ func TestProcessRecordAttributes(t *testing.T) {
 			},
 		},
 		{
-			name: "merge",
+			name: "copy",
 			attributes: map[string]string{
 				"team":    "order",
 				"message": "hello",
 			},
 			cs: config.ContextStatements{
 				Context: config.Log,
-				Mode:    config.Merge,
+				Mode:    config.Copy,
 				Attributes: []string{
 					"team",
 				},
@@ -559,7 +559,7 @@ func TestProcessRecordAttributes(t *testing.T) {
 			},
 			cs: config.ContextStatements{
 				Context: config.Log,
-				Mode:    config.Merge,
+				Mode:    config.Copy,
 				Attributes: []string{
 					"service.name",
 				},

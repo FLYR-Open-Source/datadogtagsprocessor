@@ -9,7 +9,7 @@ import (
 // Mode selects what happens to the source attributes after they are copied
 // into ddtags.
 //
-// Merge keeps the source attributes in place, while Move removes them once
+// Copy keeps the source attributes in place, while Move removes them once
 // the tags are added.
 type Mode string
 
@@ -17,19 +17,19 @@ const (
 	// Move copies the selected attributes into ddtags and removes them
 	// from the source.
 	Move Mode = "move"
-	// Merge copies the selected attributes into ddtags and keeps them
+	// Copy copies the selected attributes into ddtags and keeps them
 	// in the source.
-	Merge Mode = "merge"
+	Copy Mode = "copy"
 )
 
 // UnmarshalText parses a mode from the collector configuration.
 //
-// The value is case insensitive. Anything other than "move" or "merge"
+// The value is case insensitive. Anything other than "move" or "copy"
 // fails the config load.
 func (a *Mode) UnmarshalText(text []byte) error {
 	str := Mode(strings.ToLower(string(text)))
 	switch str {
-	case Move, Merge:
+	case Move, Copy:
 		*a = str
 		return nil
 	default:

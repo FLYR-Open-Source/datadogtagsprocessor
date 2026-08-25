@@ -15,10 +15,10 @@ func TestModeUnmarshalText(t *testing.T) {
 		wantErr  bool
 	}{
 		{name: "move", text: "move", expected: Move},
-		{name: "merge", text: "merge", expected: Merge},
+		{name: "copy", text: "copy", expected: Copy},
 		{name: "uppercase is normalized", text: "MOVE", expected: Move},
-		{name: "mixed case is normalized", text: "Merge", expected: Merge},
-		{name: "unknown mode", text: "copy", wantErr: true},
+		{name: "mixed case is normalized", text: "Copy", expected: Copy},
+		{name: "unknown mode", text: "migrate", wantErr: true},
 		{name: "empty", text: "", wantErr: true},
 	}
 
@@ -72,7 +72,7 @@ func TestContextIDUnmarshalText(t *testing.T) {
 
 func TestCompile(t *testing.T) {
 	cs := ContextStatements{
-		Mode:    Merge,
+		Mode:    Copy,
 		Context: Resource,
 		Attributes: []string{
 			"k8s.*",
@@ -85,7 +85,7 @@ func TestCompile(t *testing.T) {
 	compiled := cs.Compile()
 
 	assert.Equal(t, CompiledStatement{
-		Mode:    Merge,
+		Mode:    Copy,
 		Context: Resource,
 		Attributes: []CompiledAttribute{
 			{Key: "k8s", Prefix: "k8s.", Wildcard: true},

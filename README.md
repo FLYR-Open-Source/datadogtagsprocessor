@@ -33,7 +33,7 @@ Each statement has:
 
 | Field        | Description                                                                                                        |
 | ------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `mode`       | `move` or `merge`. `move` removes the source attribute after copying it into `ddtags`; `merge` leaves it in place. |
+| `mode`       | `move` or `copy`. `move` removes the source attribute after copying it into `ddtags`; `copy` leaves it in place. |
 | `context`    | Where to read the attributes from: `resource`, `span` (traces only), or `log` (logs only).                        |
 | `attributes` | List of attribute keys to copy into `ddtags`. A trailing `.*` matches all attributes under that namespace.         |
 
@@ -50,7 +50,7 @@ processors:
         attributes:
           - k8s.*
           - deployment.environment.name
-      - mode: merge
+      - mode: copy
         context: span
         attributes:
           - team
@@ -59,7 +59,7 @@ processors:
         context: resource
         attributes:
           - k8s.*
-      - mode: merge
+      - mode: copy
         context: log
         attributes:
           - team
@@ -95,20 +95,20 @@ request.id: req-abc123
 The tags end up the same in both modes. The only difference is what happens to the
 source attributes afterwards.
 
-### Merge
+### Copy
 
-`merge` copies the selected attributes into `ddtags` and leaves them in place.
+`copy` copies the selected attributes into `ddtags` and leaves them in place.
 
 ```yaml
 processors:
   datadog_tags:
     log_statements:
-      - mode: merge
+      - mode: copy
         context: resource
         attributes:
           - k8s.*
           - service.name
-      - mode: merge
+      - mode: copy
         context: log
         attributes:
           - team
