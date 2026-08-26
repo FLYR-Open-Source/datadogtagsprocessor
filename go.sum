@@ -61,10 +61,16 @@ github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee h1:W5t00kpgFd
 github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden v0.157.0 h1:IeELXc6t6ckP+/rNK6Ni0DIB0qY9Hn2RjqdtvtLkgWY=
 github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden v0.157.0/go.mod h1:9wwPZDYZ+mVPTnI3jomH3mQildfH6SBNoqFwlLdWLiw=
+github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden v0.159.0 h1:z2FvBmvlvE/jsVFwGfKOUQweGjJlPfH0QBOo2ES76kE=
+github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden v0.159.0/go.mod h1:ExbYdUzLx9i757v9fc3meEPkepBScJKUfFiXxQJX5Do=
 github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest v0.157.0 h1:yM+TsAD0OEr1RdxZ/NB8C0kArZCkgzOjzOp9TbmdX0w=
 github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest v0.157.0/go.mod h1:rugNqTrH2rSgtTV4Sko7rI4WgETpYXwx+Cpi9FfpPuY=
+github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest v0.159.0 h1:7JKqFkaTAaLCgP4XY57EAIDXGD4xb0NnlNVhIZ0fEd8=
+github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest v0.159.0/go.mod h1:Hc+PQQduHGJKUXXumlIydv2jr07sFN5yIllZDldoMKc=
 github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.157.0 h1:oQWc2BKFkPqo14Zh+qDEWZItxJacKSubLjtFirojFnk=
 github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.157.0/go.mod h1:fMeXcxEg6tHlCPRjf2jQ6KavnvDrwoGvJ8q8ihDk3BE=
+github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.159.0 h1:myQAaDpKnfPy/KU9BsBEWPsinvEPI4UFO5Yi2v7RiTU=
+github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.159.0/go.mod h1:Qzcts6LLXE+jpdEy1LCHL2Ddgit8hw08Ifj3zuYTitw=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
