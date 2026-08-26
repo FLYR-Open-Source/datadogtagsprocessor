@@ -2,5 +2,18 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "groupName": "otel",
+      "groupSlug": "otel",
+      "matchDatasources": [
+        "go"
+      ],
+      "matchPackageNames": [
+        "github.com/open-telemetry/opentelemetry-collector-contrib/**",
+        "go.opentelemetry.io/collector/**"
+      ]
+    }
   ]
 }
