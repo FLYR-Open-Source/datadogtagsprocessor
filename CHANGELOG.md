@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.2](https://github.com/FLYR-Open-Source/datadogtagsprocessor/compare/v0.2.1...v0.2.2) (2026-08-26)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/stretchr/testify to v1.12.1 ([#17](https://github.com/FLYR-Open-Source/datadogtagsprocessor/issues/17)) ([7947689](https://github.com/FLYR-Open-Source/datadogtagsprocessor/commit/7947689cf5481fafaad84d1840a58e1396d1be7d))
+* **deps:** update otel to v0.159.0 ([#20](https://github.com/FLYR-Open-Source/datadogtagsprocessor/issues/20)) ([2381cb5](https://github.com/FLYR-Open-Source/datadogtagsprocessor/commit/2381cb5e143c25f09a092f53fe1b213c87d4dff1))
+
 ## [0.2.1](https://github.com/FLYR-Open-Source/datadogtagsprocessor/compare/v0.2.0...v0.2.1) (2026-08-25)
 
 
