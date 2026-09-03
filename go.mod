@@ -3,7 +3,7 @@ module github.com/FLYR-Open-Source/datadogtagsprocessor
 go 1.26.4
 
 require (
-	github.com/go-jose/go-jose/v4 v4.1.4
+	github.com/go-jose/go-jose/v4 v4.1.5
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden v0.159.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest v0.159.0
 	github.com/stretchr/testify v1.12.1
